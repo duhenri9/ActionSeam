@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  reference-conformance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Tests
+        run: node --test
+      - name: Repository validation
+        run: node scripts/validate-repository.js
+      - name: Reference evidence
+        run: node src/cli.js demo --subject reference --out artifacts/reference
+      - name: Known-bad counterexamples
+        run: node src/cli.js demo --subject known-bad --out artifacts/known-bad
+      - name: Upload conformance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: actionseam-reference-evidence
+          path: artifacts/
+          if-no-files-found: error

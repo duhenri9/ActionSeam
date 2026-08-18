@@ -1,0 +1,24 @@
+{
+  "schema": "actionseam.adapter-provenance/v1",
+  "upstream": "vinilana/invokta",
+  "adapterKind": "action-target",
+  "package": "@invokta/core",
+  "packageVersion": "0.6.0",
+  "observed": {
+    "date": "2026-08-19",
+    "commit": "10648f80a1df9cbe21e99eb3119772f3ad824b12",
+    "branch": "main"
+  },
+  "license": "MIT",
+  "publicSurfacesReviewed": [
+    "@invokta/core public export",
+    "createEngine",
+    "engine.invoke",
+    "Principal boundary",
+    "input/output validation",
+    "access rule",
+    "direct/CLI/MCP convergence on engine.invoke"
+  ],
+  "supportStatus": "NOT_IMPLEMENTED",
+  "notes": "ActionSeam will treat Invokta as an external target, not as the type system for ActionSeam core contracts."
+}

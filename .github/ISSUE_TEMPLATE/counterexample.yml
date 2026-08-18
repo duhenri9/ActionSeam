@@ -1,0 +1,27 @@
+name: Counterexample report
+description: Share a reproducible failing profile against an exact target
+title: "counterexample: "
+body:
+  - type: input
+    id: target
+    attributes:
+      label: Target + exact version
+    validations:
+      required: true
+  - type: input
+    id: profile
+    attributes:
+      label: Profile id
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction command
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence / report excerpt
+      description: Remove secrets and sensitive upstream details.
