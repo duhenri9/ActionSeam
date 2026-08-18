@@ -20,7 +20,7 @@
 | Target | State |
 | --- | --- |
 | DeepSeek Harness | `NOT_IMPLEMENTED` — provenance reviewed only |
-| Invokta | `NOT_IMPLEMENTED` — provenance reviewed only |
+| Invokta | `PARTIAL` — real `@invokta/core@0.6.0` direct `engine.invoke` evidence; CLI/MCP/HTTP not tested |
 
 No adapter should move to `PARTIAL` or `SUPPORTED` without executable evidence committed to this repository.
 

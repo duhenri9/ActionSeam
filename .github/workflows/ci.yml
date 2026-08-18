@@ -44,16 +44,14 @@ jobs:
         with:
           node-version: '22'
       - name: Install exact adapter dependencies
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify real Invokta boundary
         run: npm test
       - name: Generate Invokta matrix evidence
         run: npm run evidence
-      - name: Upload Invokta evidence and generated lockfile
+      - name: Upload Invokta evidence
         uses: actions/upload-artifact@v4
         with:
           name: actionseam-invokta-evidence
-          path: |
-            adapters/invokta/artifacts/
-            adapters/invokta/package-lock.json
+          path: adapters/invokta/artifacts/
           if-no-files-found: error

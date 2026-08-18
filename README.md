@@ -6,7 +6,7 @@ ActionSeam is an experimental open-source project by **WM3 Digital** for testing
 
 It runs the same synthetic profile against an exact runtime/action-target configuration, gathers inspectable evidence, and returns a scoped result. A failure should produce something a maintainer can reproduce — not just a score.
 
-> **Maturity: EXPERIMENTAL / pre-launch.** The reference lab is executable. External DeepSeek Harness and Invokta adapters are researched but **not implemented**, so no compatibility claim exists for them yet.
+> **Maturity: EXPERIMENTAL / pre-launch.** The reference lab is executable. The Invokta `0.6.0` direct ActionTarget is **PARTIAL** with CI evidence; DeepSeek Harness remains **NOT IMPLEMENTED**. No community-launch claim exists yet.
 
 ## See it fail in under a minute
 
@@ -122,9 +122,24 @@ See [`docs/profiles.md`](./docs/profiles.md) for the profile contract.
 | ActionSeam reference action target | action target | executable / experimental |
 | ActionSeam known-bad control subject | test control | executable / intentionally failing |
 | DeepSeek Harness `@deepseek-ai/dsh@0.1.0-rc.7` | runtime target | **NOT IMPLEMENTED** |
-| Invokta `@invokta/core@0.6.0` | action target | **NOT IMPLEMENTED** |
+| Invokta `@invokta/core@0.6.0` | action target | **PARTIAL** — direct `engine.invoke`, 11-profile reference matrix; CLI/MCP/HTTP not tested |
 
 Package/version research is not counted as adapter support. Provenance records live under [`adapters/`](./adapters/).
+
+
+## First external differential result
+
+The first real external ActionTarget evidence uses `@invokta/core@0.6.0` over direct `engine.invoke`:
+
+```text
+ReferenceRuntime → InvoktaActionTarget
+PASS 11 / FAIL 0
+
+KnownBadRuntime → InvoktaActionTarget
+PASS 4 / FAIL 7
+```
+
+With the deliberately unsafe runtime, the Invokta boundary still preserved input validation, output validation, stale-revision protection at the synthetic provider boundary, and tenant access. It did not hide runtime-side failures. See [`adapters/invokta/README.md`](./adapters/invokta/README.md) for exact attribution and limitations.
 
 ## Architecture at a glance
 

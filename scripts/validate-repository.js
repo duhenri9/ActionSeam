@@ -38,7 +38,11 @@ if (packageJson.private !== true) throw new Error('package remains private until
 for (const path of ['adapters/deepseek-harness/provenance.json', 'adapters/invokta/provenance.json']) {
   const record = JSON.parse(await readFile(resolve(root, path), 'utf8'))
   if (!record.upstream || !record.observed || !record.license) throw new Error(`${path} is missing provenance fields`)
-  if (record.supportStatus !== 'NOT_IMPLEMENTED') throw new Error(`${path} must not claim adapter support before implementation evidence`)
+  const allowedStatuses = new Set(['NOT_IMPLEMENTED', 'PARTIAL', 'SUPPORTED'])
+  if (!allowedStatuses.has(record.supportStatus)) throw new Error(`${path} has an invalid supportStatus`)
+  if (record.supportStatus !== 'NOT_IMPLEMENTED' && !record.verifiedEvidence) {
+    throw new Error(`${path} claims executable support without verifiedEvidence`)
+  }
 }
 
 const publicSource = [

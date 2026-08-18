@@ -6,6 +6,7 @@ All notable ActionSeam changes will be recorded here.
 
 ### Added
 
+- real `@invokta/core@0.6.0` direct ActionTarget verification with differential evidence and frozen adapter lockfile;
 - clean-room reference runtime/action target;
 - deterministic synthetic external state and fault injection;
 - eleven experimental conformance profiles;
