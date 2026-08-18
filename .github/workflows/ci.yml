@@ -31,3 +31,29 @@ jobs:
           name: actionseam-reference-evidence
           path: artifacts/
           if-no-files-found: error
+
+  invokta-action-target:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: adapters/invokta
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install exact adapter dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify real Invokta boundary
+        run: npm test
+      - name: Generate Invokta matrix evidence
+        run: npm run evidence
+      - name: Upload Invokta evidence and generated lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: actionseam-invokta-evidence
+          path: |
+            adapters/invokta/artifacts/
+            adapters/invokta/package-lock.json
+          if-no-files-found: error
