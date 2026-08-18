@@ -1,0 +1,25 @@
+{
+  "schema": "actionseam.adapter-provenance/v1",
+  "upstream": "deepseek-ai/deepseek-harness",
+  "adapterKind": "runtime",
+  "package": "@deepseek-ai/dsh",
+  "packageVersion": "0.1.0-rc.7",
+  "observed": {
+    "date": "2026-08-19",
+    "commit": "99f6f02fecdb7dff40c3fbc9470f5907c29f74ca",
+    "branch": "master"
+  },
+  "license": "MIT",
+  "publicSurfacesReviewed": [
+    "CLI package @deepseek-ai/dsh",
+    "web/headless profiles",
+    "session events",
+    "agent/* extension events",
+    "tools/pre-execute",
+    "tools/execute",
+    "tools/post-execute",
+    "plugin/patch configuration"
+  ],
+  "supportStatus": "NOT_IMPLEMENTED",
+  "notes": "This record does not claim conformance support. A future adapter must declare unsupported observation/control surfaces explicitly."
+}

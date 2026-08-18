@@ -1,0 +1,30 @@
+name: Adapter proposal
+description: Propose or update a runtime/action-target adapter
+title: "adapter: "
+body:
+  - type: input
+    id: upstream
+    attributes:
+      label: Upstream project/package
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Exact version/commit
+    validations:
+      required: true
+  - type: textarea
+    id: surfaces
+    attributes:
+      label: Public APIs / seams available
+    validations:
+      required: true
+  - type: textarea
+    id: profiles
+    attributes:
+      label: Profiles that appear testable
+  - type: textarea
+    id: limits
+    attributes:
+      label: Known observation/control limits

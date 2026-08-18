@@ -2,44 +2,87 @@
 
 **Adversarial conformance for agent runtimes, action boundaries, and committed effects.**
 
-ActionSeam is an open-source project by **WM3 Digital** for testing operational invariants across tool-using agent systems under controlled failure and adversarial conditions.
+ActionSeam is an experimental open-source project by **WM3 Digital** for testing operational invariants across tool-using agent systems under controlled failure and adversarial conditions.
 
-It runs the same synthetic scenario against an exact runtime/action-system configuration, collects independently useful evidence, and returns a scoped conformance result. When an invariant fails, the goal is not a vague score: it is a counterexample another engineer can reproduce.
+It runs the same synthetic profile against an exact runtime/action-target configuration, gathers inspectable evidence, and returns a scoped result. A failure should produce something a maintainer can reproduce — not just a score.
 
-> **Maturity: experimental / pre-launch.** This repository has just been initialized from a clean history. No external runtime or action-system adapter is advertised as supported yet.
+> **Maturity: EXPERIMENTAL / pre-launch.** The reference lab is executable. External DeepSeek Harness and Invokta adapters are researched but **not implemented**, so no compatibility claim exists for them yet.
 
-## What problem does it address?
+## See it fail in under a minute
 
-A tool-using agent rarely owns the whole path from decision to external state:
+Requirements: Node.js 22+.
+
+No install step or cloud credential is required for the reference lab.
+
+```bash
+git clone https://github.com/duhenri9/ActionSeam.git
+cd ActionSeam
+node --test
+node src/cli.js demo --subject reference --out artifacts/reference
+node src/cli.js demo --subject known-bad --out artifacts/known-bad
+```
+
+Current clean-room reference output:
 
 ```text
-scenario
-   ↓
-agent runtime
-   ↓
+reference
+PASS 11
+FAIL 0
+
+known-bad control subject
+PASS 0
+FAIL 11
+```
+
+The known-bad subject is deliberately vulnerable test equipment. It is **not** a model of DeepSeek Harness, Invokta, or another named project. Its purpose is to prove the validators can detect the properties they claim to test.
+
+Open:
+
+```text
+artifacts/reference/inspector.html
+artifacts/known-bad/inspector.html
+```
+
+or reproduce one failing invariant directly:
+
+```bash
+node src/cli.js run authority.approval-binding.v1 --subject known-bad
+```
+
+## The problem
+
+A tool-using agent rarely owns the complete path from model-visible context to external state:
+
+```text
+model / runtime
+      ↓
+action request
+      ↓
 action boundary / transport
-   ↓
+      ↓
 provider
-   ↓
+      ↓
 committed state
 ```
 
-Each layer can be individually well-designed while a cross-layer invariant still fails.
+Strong components can still fail at the seams between them.
 
-Examples:
+ActionSeam currently exercises questions such as:
 
-- an approval can become stale after material arguments change;
-- a later response can accidentally override a binding deny;
-- identity-like fields inside model/business input can be mistaken for trusted identity;
-- a provider can commit successfully while the response is lost, causing a retry to duplicate the effect;
-- the same semantic action can behave differently across delivery transports;
-- telemetry can show *something happened* without providing enough evidence to reconstruct what materially influenced execution.
+- Did materially changed arguments invalidate the approval that covered the old action?
+- Can a later allow reverse a binding deny?
+- Can payload fields named `principal`, `role`, or `tenant` replace trusted identity?
+- What happens when the provider commits, the response disappears, and the runtime retries?
+- Can malformed input reach an effect? Can malformed provider output be called success?
+- Can a stale expected revision overwrite newer state?
+- Can retrieved model-visible text manufacture authority?
+- Can the material model-visible request be reconstructed from durable evidence?
+- Can tenant-A mutate tenant-B synthetic state?
+- Does a private canary cross the model-visible boundary?
 
-ActionSeam is designed to make those properties testable without requiring real customer data or real external side effects.
+## Result states
 
-## Result model
-
-An invariant result is deliberately explicit:
+Each invariant returns exactly one:
 
 ```text
 PASS
@@ -49,62 +92,116 @@ NOT_TESTED
 INDETERMINATE
 ```
 
-`UNSUPPORTED` is not a weak pass. `INDETERMINATE` is not a hidden failure. Results are scoped to the exact versions, profiles, transports, fixtures, and evidence available for the run.
+A `PASS` is scoped to the exact profile, subject versions, configuration, and evidence in the report. `UNSUPPORTED` is not a weak pass, and `INDETERMINATE` is not a hidden failure.
 
 ActionSeam does **not** issue blanket safety certification for a framework or product.
 
-## Project direction
+## Shipped experimental profiles
 
-The first clean-room implementation will establish:
+| Profile | Focus |
+| --- | --- |
+| `authority.approval-binding.v1` | approval ↔ material action arguments |
+| `authority.monotonic-deny.v1` | deny cannot be silently reversed |
+| `identity.external-principal.v1` | trusted identity versus payload identity |
+| `effects.idempotent-retry.v1` | uncertain commit + retry |
+| `contracts.input-validation.v1` | malformed action input |
+| `contracts.output-validation.v1` | malformed provider output |
+| `effects.stale-revision.v1` | concurrent/stale state |
+| `authority.untrusted-context.v1` | retrieved content versus authority |
+| `reconstruction.model-visible.v1` | durable request reconstruction |
+| `isolation.tenant-boundary.v1` | synthetic tenant isolation |
+| `isolation.secret-canary.v1` | private-to-model boundary |
 
-- framework-neutral scenario, runtime-adapter, action-target, evidence, invariant, and report contracts;
-- a hermetic reference runtime and action target;
-- deterministic synthetic external state;
-- a deliberately vulnerable reference subject so the test suite proves it can detect failures;
-- versioned failure/adversarial profiles;
-- counterexample-first reporting;
-- an operator-legible Inspector;
-- public adapters for selected external projects only after their observable/control surfaces are verified.
+See [`docs/profiles.md`](./docs/profiles.md) for the profile contract.
 
-The first external research targets are **DeepSeek Harness** as an agent-runtime target and **Invokta** as an action-boundary target. Neither project defines ActionSeam's core contracts, and neither is treated as a foundation or dependency of the project thesis.
+## Current target matrix
+
+| Target | Role | Current state |
+| --- | --- | --- |
+| ActionSeam reference runtime | runtime | executable / experimental |
+| ActionSeam reference action target | action target | executable / experimental |
+| ActionSeam known-bad control subject | test control | executable / intentionally failing |
+| DeepSeek Harness `@deepseek-ai/dsh@0.1.0-rc.7` | runtime target | **NOT IMPLEMENTED** |
+| Invokta `@invokta/core@0.6.0` | action target | **NOT IMPLEMENTED** |
+
+Package/version research is not counted as adapter support. Provenance records live under [`adapters/`](./adapters/).
+
+## Architecture at a glance
+
+```text
+versioned profile
+   ├── synthetic scenario
+   ├── fault / disturbance
+   └── invariant
+           │
+           ▼
+      runtime subject
+           │
+           ▼
+       action target
+           │
+           ▼
+ synthetic external state
+           │
+           ├── attempts
+           ├── effects
+           └── pre/post state
+           │
+           ▼
+ evidence + validator
+           │
+           ▼
+ conformance report
+   ├── explicit result
+   ├── evidence refs
+   └── counterexample
+```
+
+ActionSeam adapts external systems; it does not replace them and does not adopt one upstream project's native types as its universal contract.
 
 ## What ActionSeam is not
 
-ActionSeam is not another general-purpose agent runtime, workflow engine, MCP framework, action framework, model router, generic policy engine, observability stack, or security-certification service.
+ActionSeam is not another general agent runtime, action framework, workflow engine, MCP framework, model router, generic policy engine, production observability service, or security-certification authority.
 
-It is also not an open-source edition of any proprietary WM3 product.
+The transition from probabilistic model behavior to deterministic external effects is one reason seams matter, but it is not the complete project scope: reconstruction, contracts, transports, recovery, tenancy, secret boundaries, and operator legibility matter too.
 
-## Clean-room origin
+## Evidence and counterexamples
 
-This repository was intentionally created with a fresh Git history.
+Reports use schema `actionseam.conformance-report/v0.1` and include a deterministic SHA-256 digest of the report body.
 
-The public implementation is authored from public specifications, public upstream interfaces, generic engineering knowledge, and synthetic scenarios created specifically for ActionSeam. It is not a fork, repository split, subtree, sanitized export, or mechanical rewrite of a private WM3 codebase.
+A failed profile carries:
 
-A detailed provenance policy will be part of the first implementation PR.
+- scenario id;
+- expected invariant;
+- observed divergence;
+- bounded evidence near the failure;
+- reproduction command.
 
-## Community posture
+Read [`docs/evidence.md`](./docs/evidence.md) and [`docs/counterexamples.md`](./docs/counterexamples.md).
 
-The long-term contribution loop is simple:
+## Clean-room provenance
 
-```text
-add or update a runtime/action adapter
-              ↓
-run the same versioned profiles
-              ↓
-PASS / FAIL / UNSUPPORTED + evidence
-              ↓
-reproduce a counterexample when applicable
-              ↓
-fix upstream / adapter / profile
-              ↓
-run it again
-```
+This repository started from fresh Git history on 19 August 2026. The first commit is `bef467a98e735f425396a5dc4dd68d8360ce1755`.
 
-The project should create useful technical dialogue with runtime and action-system maintainers, not a leaderboard of blanket claims.
+The public implementation is original work authored here from public information, generic engineering knowledge, and synthetic ActionSeam scenarios. It is not a fork, repository split, sanitized export, or mechanical rewrite of a private WM3 codebase.
+
+See [`docs/provenance.md`](./docs/provenance.md).
+
+## Documentation
+
+Start with [`docs/README.md`](./docs/README.md).
+
+The documentation separates principles, architecture, scope/limits, result semantics, profiles, evidence, counterexamples, adapters, threat model, maturity, provenance, validation records, and ADRs.
+
+## Contributing
+
+Bring a runtime, an action boundary, a profile, or a smaller counterexample.
+
+Before contributing, read [`CONTRIBUTING.md`](./CONTRIBUTING.md). Potentially sensitive upstream findings should follow [`SECURITY.md`](./SECURITY.md) before public disclosure.
 
 ## License
 
-ActionSeam is being released under the **Apache License 2.0**. The canonical license file is added as part of repository bootstrap.
+Apache License 2.0. See [`LICENSE`](./LICENSE).
 
 ---
 

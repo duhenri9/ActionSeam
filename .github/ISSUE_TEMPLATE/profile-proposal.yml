@@ -1,0 +1,26 @@
+name: Profile proposal
+description: Propose a new falsifiable operational invariant
+title: "profile: "
+body:
+  - type: input
+    id: invariant
+    attributes:
+      label: Invariant
+    validations:
+      required: true
+  - type: textarea
+    id: scenario
+    attributes:
+      label: Synthetic scenario and disturbance
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence required to decide PASS/FAIL
+    validations:
+      required: true
+  - type: textarea
+    id: gap
+    attributes:
+      label: Why this belongs in ActionSeam rather than an adjacent framework
