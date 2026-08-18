@@ -51,6 +51,44 @@ function normalizeCommittedResult(result) {
   }
 }
 
+/**
+ * Keep only semantically material, reproducible fields from public Invokta
+ * lifecycle events. Upstream timestamps and duration measurements are useful
+ * telemetry, but they are intentionally excluded from ActionSeam conformance
+ * evidence because including them would make an otherwise identical report
+ * digest change between executions.
+ */
+export function normalizeInvoktaEvent(event) {
+  if (event.type === 'invocation.started') {
+    return {
+      type: event.type,
+      requestId: event.requestId,
+      capabilityId: event.capabilityId,
+      source: event.source,
+      ...(event.principalId === undefined ? {} : { principalId: event.principalId }),
+    }
+  }
+
+  if (event.type === 'invocation.completed') {
+    return {
+      type: event.type,
+      requestId: event.requestId,
+      capabilityId: event.capabilityId,
+    }
+  }
+
+  if (event.type === 'invocation.failed') {
+    return {
+      type: event.type,
+      requestId: event.requestId,
+      capabilityId: event.capabilityId,
+      code: event.code,
+    }
+  }
+
+  return { type: String(event.type ?? 'unknown') }
+}
+
 function createSyntheticCapability({ store, effectId, fault }) {
   return defineCapability({
     title: 'Adjust a synthetic balance',
@@ -136,7 +174,7 @@ export class InvoktaActionTarget {
         [capabilityId]: createSyntheticCapability({ store, effectId, fault }),
       },
       onEvent(event) {
-        engineEvents.push(structuredClone(event))
+        engineEvents.push(normalizeInvoktaEvent(event))
       },
     })
 
