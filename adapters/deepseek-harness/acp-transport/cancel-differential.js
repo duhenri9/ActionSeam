@@ -154,6 +154,10 @@ async function runAcpCancellation() {
       sessionId,
       prompt: [{ type: 'text', text: CANCEL_USER_TEXT }],
     })
+    // The real await remains below after cancellation. This handler prevents
+    // an earlier probe failure from turning a later child-termination rejection
+    // into an unhandled process-level error that hides the original diagnostic.
+    promptPromise.catch(() => {})
 
     const modelStart = await waitForJson(startPath, 'in-flight model evidence', 8000)
     assert.equal(modelStart.signalPresent, true)
