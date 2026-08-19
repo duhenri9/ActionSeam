@@ -20,31 +20,48 @@
     "direct/CLI/MCP convergence on engine.invoke"
   ],
   "supportStatus": "PARTIAL",
-  "notes": "PARTIAL means the real direct engine.invoke boundary has executable evidence. It does not imply CLI/MCP/HTTP transport support or production safety.",
+  "notes": "PARTIAL means the real direct engine.invoke boundary has executable evidence. It does not imply CLI/MCP/HTTP transport support, production safety, or that all eleven end-to-end profile outcomes are native Invokta guarantees.",
   "verifiedEvidence": {
-    "workflowRun": 32197878625,
-    "artifactId": 9346469271,
-    "artifactDigest": "sha256:2911a36f6dec42eb419e525b2fb0c520349ed910aa60eb19ac797c2733f12849",
+    "testedHeadCommit": "54c1ccd66c1263ec39a1c128bcbb83b331fadb1d",
+    "workflowRun": 32198408794,
+    "artifactId": 9346637326,
+    "artifactDigest": "sha256:ba6ad7f1b541af4299781f91643ca7db3b3f7176f9a7f2d40a039aa5d3b2fa82",
     "transport": "direct",
     "referenceRuntime": {
       "pass": 11,
       "fail": 0,
-      "reportDigest": "sha256:409af23d272937ee2c11e4ab9d7738d14b5d26860d876f78b0fe1f0d41c3a6f0"
+      "reportDigest": "sha256:f5189883ecca3ff46515ecb7f3db55ea0b3715dabd6c0731196ec25f8a4f901a"
     },
     "knownBadRuntime": {
       "pass": 4,
       "fail": 7,
-      "reportDigest": "sha256:b67834b7f7bc87e24ff19b4fbb84cf1caec4e9a31a6e8f53661131e6562c3521"
+      "reportDigest": "sha256:03aa37c5a235685d2227b0b12fdd357a99dc242bef3e37e948ceecc83fb5c65b"
     }
   },
   "supportedTransportProfiles": ["direct"],
   "notTestedTransportProfiles": ["cli", "mcp-stdio", "mcp-http", "transport-differential"],
+  "attribution": {
+    "invoktaEnforcedProfiles": [
+      "contracts.input-validation.v1",
+      "contracts.output-validation.v1",
+      "isolation.tenant-boundary.v1"
+    ],
+    "invoktaApiShapeExercisedButTrustOriginRuntimeOwned": [
+      "identity.external-principal.v1"
+    ],
+    "actionSeamRuntimeOrSyntheticProviderOwnedProfiles": [
+      "effects.stale-revision.v1",
+      "effects.idempotent-retry.v1",
+      "authority.approval-binding.v1",
+      "authority.monotonic-deny.v1",
+      "authority.untrusted-context.v1",
+      "reconstruction.model-visible.v1",
+      "isolation.secret-canary.v1"
+    ]
+  },
   "boundarySensitiveProfiles": [
     "contracts.input-validation.v1",
     "contracts.output-validation.v1",
-    "effects.stale-revision.v1",
-    "isolation.tenant-boundary.v1",
-    "identity.external-principal.v1",
-    "effects.idempotent-retry.v1"
+    "isolation.tenant-boundary.v1"
   ]
 }

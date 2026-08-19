@@ -122,10 +122,9 @@ See [`docs/profiles.md`](./docs/profiles.md) for the profile contract.
 | ActionSeam reference action target | action target | executable / experimental |
 | ActionSeam known-bad control subject | test control | executable / intentionally failing |
 | DeepSeek Harness `@deepseek-ai/dsh@0.1.0-rc.7` | runtime target | **NOT IMPLEMENTED** |
-| Invokta `@invokta/core@0.6.0` | action target | **PARTIAL** — direct `engine.invoke`, 11-profile reference matrix; CLI/MCP/HTTP not tested |
+| Invokta `@invokta/core@0.6.0` | action target | **PARTIAL** — direct `engine.invoke`; end-to-end reference matrix executed; boundary attribution documented; CLI/MCP/HTTP not tested |
 
 Package/version research is not counted as adapter support. Provenance records live under [`adapters/`](./adapters/).
-
 
 ## First external differential result
 
@@ -139,7 +138,11 @@ KnownBadRuntime → InvoktaActionTarget
 PASS 4 / FAIL 7
 ```
 
-With the deliberately unsafe runtime, the Invokta boundary still preserved input validation, output validation, stale-revision protection at the synthetic provider boundary, and tenant access. It did not hide runtime-side failures. See [`adapters/invokta/README.md`](./adapters/invokta/README.md) for exact attribution and limitations.
+The `11 / 0` reference row is an **end-to-end composition result**, not eleven guarantees supplied by Invokta. The known-bad differential is used to attribute enforcement rather than turn the matrix into a blanket framework score.
+
+In this adapter, real Invokta behavior directly enforces input validation, output validation, and capability access used by the tenant-boundary profile. Principal is supplied separately from business input at the Invokta API, but choosing a trusted principal remains a runtime responsibility. Stale-revision semantics and retry/idempotency remain ActionSeam synthetic provider/runtime responsibilities. Approval binding, monotonic deny, untrusted-context authority, reconstruction, and private-context handling are runtime properties.
+
+See [`adapters/invokta/README.md`](./adapters/invokta/README.md) for exact attribution and limitations.
 
 ## Architecture at a glance
 
