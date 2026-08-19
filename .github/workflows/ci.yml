@@ -73,12 +73,15 @@ jobs:
         run: npm run verify
       - name: Emit public bootstrap probe
         run: npm run probe | tee probe-output.json
+      - name: Exercise real DSH AgentLoop tool round trip
+        run: node round-trip.js | tee round-trip-output.json
       - name: Capture frozen dependency evidence
         run: |
           mkdir -p artifacts
           npm ls @deepseek-ai/cordis @deepseek-ai/dsh-agent-spine-demo @deepseek-ai/dsh-llm @deepseek-ai/dsh-tools --json > artifacts/npm-tree.json
           cp package-lock.json artifacts/package-lock.json
           cp probe-output.json artifacts/probe-output.json
+          cp round-trip-output.json artifacts/round-trip-output.json
       - name: Upload DeepSeek Harness probe evidence
         uses: actions/upload-artifact@v4
         with:
