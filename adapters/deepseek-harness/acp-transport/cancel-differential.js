@@ -213,9 +213,12 @@ async function runAcpCancellation() {
 }
 
 const directRaw = await withDeadline(runDirectCancellation(), 'direct cancellation control', 15000)
+const directTurnCancelled = directRaw.turnEndReasons.length === 1
+  && directRaw.turnEndReasons[0]?.kind === 'aborted'
+  && directRaw.turnEndReasons[0]?.reason?.kind === 'user'
 const direct = {
   path: directRaw.path,
-  cancelSettled: directRaw.modelAbort.signalAborted === true,
+  cancelSettled: directTurnCancelled,
   modelStarted: directRaw.modelStart.signalPresent === true,
   modelAbortObserved: directRaw.state.modelAbortObserved,
   networkModelCalls: directRaw.state.networkModelCalls,
@@ -228,6 +231,7 @@ const direct = {
 const acp = await runAcpCancellation()
 const differential = compareCancellation(direct, acp)
 assert.equal(differential.pass, true, `ACP cancellation diverged from direct cancellation: ${differential.mismatches.join(', ')}`)
+assert.equal(direct.cancelSettled, true, 'Direct Agent cancellation did not settle with turn/end aborted by user.')
 assert.equal(acp.protocol.cancelMethod, 'session/cancel')
 assert.equal(acp.protocol.cancelNotification, true)
 assert.equal(acp.protocol.cancelTargetMatched, true)
@@ -262,6 +266,7 @@ console.log(JSON.stringify({
       'model request is in flight before cancellation',
       'official ACP SDK emits real session/cancel notification for the exact active session',
       'DSH model AbortSignal is observed after cancellation',
+      'direct Agent turn settles with turn/end aborted by user',
       'original session/prompt settles as cancelled',
       'zero tool-body executions',
       'zero synthetic effects',
