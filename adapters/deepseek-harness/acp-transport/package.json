@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "probe": "node differential.js"
+    "probe": "node differential.js",
+    "permission": "node permission-differential.js"
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "0.25.1",
@@ -12,6 +13,7 @@
     "@deepseek-ai/dsh-acp": "0.1.0-rc.7",
     "@deepseek-ai/dsh-agent-spine-demo": "0.1.0-rc.7",
     "@deepseek-ai/dsh-llm": "0.1.0-rc.7",
-    "@deepseek-ai/dsh-tools": "0.1.0-rc.7"
+    "@deepseek-ai/dsh-tools": "0.1.0-rc.7",
+    "@deepseek-ai/dsh-user-approval": "0.1.0-rc.7"
   }
 }
