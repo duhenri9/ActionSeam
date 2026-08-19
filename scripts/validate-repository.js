@@ -36,6 +36,8 @@ const required = [
   'examples/bring-your-runtime.mjs',
   'examples/inspect-report.mjs',
   'examples/inspect-adapter-provenance.mjs',
+  'adapters/deepseek-harness/acp-transport/atomic-state-publisher.js',
+  'adapters/deepseek-harness/acp-transport/permission-state-safety.js',
   'adapters/deepseek-harness/provenance.json',
   'adapters/invokta/provenance.json',
 ]
@@ -117,8 +119,9 @@ for (const requiredMarker of [
   'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1',
   'actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0',
   'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1',
+  'npm run test:harness-safety',
 ]) {
-  if (!ci.includes(requiredMarker)) throw new Error(`CI is missing pinned official Action: ${requiredMarker}`)
+  if (!ci.includes(requiredMarker)) throw new Error(`CI is missing required hardening marker: ${requiredMarker}`)
 }
 for (const staleAction of ['actions/checkout@v4', 'actions/setup-node@v4', 'actions/upload-artifact@v4']) {
   if (ci.includes(staleAction)) throw new Error(`CI contains stale mutable Action reference: ${staleAction}`)
@@ -127,6 +130,12 @@ const checkoutCount = (ci.match(/actions\/checkout@/g) ?? []).length
 const nonPersistentCredentialCount = (ci.match(/persist-credentials: false/g) ?? []).length
 if (checkoutCount === 0 || nonPersistentCredentialCount !== checkoutCount) {
   throw new Error('every CI checkout must disable persisted GitHub credentials')
+}
+
+const acpPackageJson = JSON.parse(await readFile(resolve(root, 'adapters/deepseek-harness/acp-transport/package.json'), 'utf8'))
+const harnessSafety = acpPackageJson.scripts?.['test:harness-safety'] ?? ''
+for (const requiredTest of ['cancel-harness-safety.js', 'permission-state-safety.js']) {
+  if (!harnessSafety.includes(requiredTest)) throw new Error(`ACP harness safety script must execute ${requiredTest}`)
 }
 
 for (const path of ['adapters/deepseek-harness/provenance.json', 'adapters/invokta/provenance.json']) {
