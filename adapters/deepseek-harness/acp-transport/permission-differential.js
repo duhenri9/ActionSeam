@@ -185,7 +185,7 @@ console.log(JSON.stringify({
   transport: '@deepseek-ai/dsh-acp@0.1.0-rc.7',
   approval: '@deepseek-ai/dsh-user-approval@0.1.0-rc.7',
   sdk: '@agentclientprotocol/sdk@0.25.1',
-  permissionTransportSupportStatus: 'NOT_PROMOTED',
+  permissionTransportSupportStatus: 'PARTIAL',
   evidenceKind: 'direct-vs-acp-request-permission-allow-reject',
   cases,
   negativeControl: {
