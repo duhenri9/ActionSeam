@@ -6,7 +6,7 @@ All notable ActionSeam changes will be recorded here.
 
 ### Added
 
-- source-level runnable examples for the reference suite, a deliberately failing known-bad profile, and report inspection, all executed by CI as public onboarding paths;
+- source-level runnable examples for the reference suite, a deliberately failing known-bad profile, local profile authoring, report inspection, and adapter provenance inspection, all executed by CI as public onboarding paths where practical;
 - explicit package/release-readiness gates that keep the root package at `0.0.0-experimental` and `private: true` until a stable public contract, release integrity evidence, and a dedicated publication ADR exist;
 - real DeepSeek Harness ACP `session/cancel` pre-tool-dispatch differential over the published `@deepseek-ai/dsh-acp@0.1.0-rc.7` bridge and official ACP SDK, proving model-abort propagation, `cancelled` prompt settlement, zero tool/effect execution, frozen dependencies, and a synthetic post-cancel tool/effect negative control;
 - real DeepSeek Harness ACP `session/request_permission` one-shot allow/reject differential over the published `@deepseek-ai/dsh-acp@0.1.0-rc.7` bridge and official ACP SDK, with exact session/tool-call identity, effect/no-effect semantics, frozen dependencies, and an inverted-effect negative control;
