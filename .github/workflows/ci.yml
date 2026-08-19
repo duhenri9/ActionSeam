@@ -37,10 +37,16 @@ jobs:
         run: node --test
       - name: Repository validation
         run: node scripts/validate-repository.js
+      - name: Execute public source-level examples
+        run: npm run examples:check
       - name: Reference evidence
         run: node src/cli.js demo --subject reference --out artifacts/reference
       - name: Known-bad counterexamples
         run: node src/cli.js demo --subject known-bad --out artifacts/known-bad
+      - name: Verify report inspection example
+        run: |
+          node examples/inspect-report.mjs artifacts/reference/report.json
+          node examples/inspect-report.mjs artifacts/known-bad/report.json
       - name: Upload conformance evidence
         uses: actions/upload-artifact@v4
         with:

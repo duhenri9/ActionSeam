@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
-  "description": "Adversarial conformance for agent runtimes, action boundaries, and committed effects.",
+  "description": "Adversarial conformance testing for agent runtimes, action boundaries, transports, and committed effects.",
   "engines": {
     "node": ">=22"
   },
@@ -12,8 +12,9 @@
     "test": "node --test",
     "demo": "node src/cli.js demo --subject reference --out artifacts/reference",
     "demo:bad": "node src/cli.js demo --subject known-bad --out artifacts/known-bad",
+    "examples:check": "node examples/run-reference-suite.mjs && node examples/run-known-bad-profile.mjs",
     "validate": "node scripts/validate-repository.js",
     "security:scan-history": "node scripts/scan-public-history-secrets.js",
-    "check": "npm test && npm run validate && npm run demo && npm run demo:bad"
+    "check": "npm test && npm run validate && npm run examples:check && npm run demo && npm run demo:bad"
   }
 }
