@@ -53,10 +53,72 @@ export class ReferenceRuntime {
 
     const approvalDigest = digest(proposedAction)
     if (scenario.approvalRequired) {
-      evidence.append('authority.approval', { actionDigest: approvalDigest, status: 'approved' })
+      evidence.append('authority.approval', {
+        actionDigest: approvalDigest,
+        status: 'approved',
+        decision: 'allow-once',
+        callIndex: 1,
+      })
+    }
+
+    if (scenario.approvalSequence) {
+      const firstEffectId = `effect:${digest({ scenarioId: scenario.id, callIndex: 1, action: proposedAction, principal: trustedPrincipal })}`
+      const firstResult = await actionTarget.invoke({
+        action: proposedAction,
+        principal: trustedPrincipal,
+        effectId: firstEffectId,
+        store,
+      })
+      evidence.append('action.attempt', {
+        effectId: firstEffectId,
+        result: structuredClone(firstResult),
+        attempt: 1,
+        callIndex: 1,
+      })
+      if (!firstResult.ok) {
+        evidence.append('action.terminal', { outcome: 'ACTION_FAILED', result: structuredClone(firstResult) })
+        return { outcome: 'ACTION_FAILED', principal: trustedPrincipal, evidence: evidence.all(), result: firstResult }
+      }
+
+      const secondAction = {
+        ...structuredClone(proposedAction),
+        input: {
+          ...structuredClone(proposedAction.input),
+          ...structuredClone(scenario.approvalSequence.secondPatch ?? {}),
+        },
+      }
+      evidence.append('action.proposed', {
+        actionDigest: digest(secondAction),
+        action: secondAction,
+        callIndex: 2,
+      })
+      evidence.append('authority.approval', {
+        actionDigest: digest(secondAction),
+        status: 'rejected',
+        decision: 'rejected',
+        callIndex: 2,
+        priorGrantReusable: false,
+      })
+      evidence.append('action.terminal', {
+        outcome: 'SECOND_CALL_DENIED',
+        firstResult: structuredClone(firstResult),
+      })
+      return {
+        outcome: 'SECOND_CALL_DENIED',
+        principal: trustedPrincipal,
+        evidence: evidence.all(),
+        result: firstResult,
+      }
     }
 
     let executionAction = structuredClone(proposedAction)
+    if (scenario.disturbance?.type === 'attempt-runtime-argument-rewrite') {
+      evidence.append('action.arguments-immutable', {
+        attemptedPatch: structuredClone(scenario.disturbance.patch),
+        mutationApplied: false,
+        materializedDigest: digest(executionAction),
+      })
+    }
     if (scenario.disturbance?.type === 'mutate-after-approval') {
       executionAction = {
         ...executionAction,
@@ -154,9 +216,81 @@ export class KnownBadRuntime {
     }
 
     const approvalDigest = digest(proposedAction)
-    if (scenario.approvalRequired) evidence.append('authority.approval', { actionDigest: approvalDigest, status: 'approved' })
+    if (scenario.approvalRequired) {
+      evidence.append('authority.approval', {
+        actionDigest: approvalDigest,
+        status: 'approved',
+        decision: 'allow-once',
+        callIndex: 1,
+      })
+    }
+
+    if (scenario.approvalSequence) {
+      const firstEffectId = `unsafe-effect:${digest({ scenarioId: scenario.id, callIndex: 1, action: proposedAction })}`
+      const firstResult = await actionTarget.invoke({
+        action: proposedAction,
+        principal,
+        effectId: firstEffectId,
+        store,
+      })
+      evidence.append('action.attempt', {
+        effectId: firstEffectId,
+        result: structuredClone(firstResult),
+        attempt: 1,
+        callIndex: 1,
+      })
+
+      const secondAction = {
+        ...structuredClone(proposedAction),
+        input: {
+          ...structuredClone(proposedAction.input),
+          ...structuredClone(scenario.approvalSequence.secondPatch ?? {}),
+        },
+      }
+      evidence.append('action.proposed', {
+        actionDigest: digest(secondAction),
+        action: secondAction,
+        callIndex: 2,
+      })
+      evidence.append('authority.approval', {
+        actionDigest: digest(secondAction),
+        status: 'reused',
+        decision: 'unsafe-reuse-allow-once',
+        callIndex: 2,
+        priorGrantReusable: true,
+      })
+      const secondEffectId = `unsafe-effect:${digest({ scenarioId: scenario.id, callIndex: 2, action: secondAction })}`
+      const secondResult = await actionTarget.invoke({
+        action: secondAction,
+        principal,
+        effectId: secondEffectId,
+        store,
+      })
+      evidence.append('action.attempt', {
+        effectId: secondEffectId,
+        result: structuredClone(secondResult),
+        attempt: 2,
+        callIndex: 2,
+        unsafeGrantReuse: true,
+      })
+      const outcome = firstResult.ok && secondResult.ok ? 'COMPLETED' : 'ACTION_FAILED'
+      evidence.append('action.terminal', { outcome, result: structuredClone(secondResult) })
+      return { outcome, principal, evidence: evidence.all(), result: secondResult }
+    }
 
     let executionAction = structuredClone(proposedAction)
+    if (scenario.disturbance?.type === 'attempt-runtime-argument-rewrite') {
+      executionAction = {
+        ...executionAction,
+        input: { ...executionAction.input, ...structuredClone(scenario.disturbance.patch) },
+      }
+      evidence.append('action.arguments-immutable', {
+        attemptedPatch: structuredClone(scenario.disturbance.patch),
+        mutationApplied: true,
+        materializedDigest: digest(executionAction),
+        unsafeMutableArguments: true,
+      })
+    }
     if (scenario.disturbance?.type === 'mutate-after-approval') {
       executionAction = {
         ...executionAction,

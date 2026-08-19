@@ -32,12 +32,12 @@ Current clean-room reference output:
 
 ```text
 reference
-PASS 11
+PASS 13
 FAIL 0
 
 known-bad control subject
 PASS 0
-FAIL 11
+FAIL 13
 ```
 
 The known-bad subject is deliberately vulnerable test equipment. It is **not** a model of DeepSeek Harness, Invokta, or another named project. Its purpose is to prove the validators can detect the properties they claim to test.
@@ -76,10 +76,11 @@ Strong components can still fail at the seams between them.
 ActionSeam currently exercises questions such as:
 
 - Did materially changed arguments invalidate the approval that covered the old action?
+- Does an allow-once approval stay limited to the call that asked for it?
 - Can a later allow reverse a binding deny?
 - Can payload fields named `principal`, `role`, or `tenant` replace trusted identity?
 - What happens when the provider commits, the response disappears, and the runtime retries?
-- Can malformed input reach an effect? Can malformed provider output be called success?
+- Can malformed input reach an effect? Can materialized arguments be silently rewritten? Can malformed provider output be called success?
 - Can a stale expected revision overwrite newer state?
 - Can retrieved model-visible text manufacture authority?
 - Can the material model-visible request be reconstructed from durable evidence?
@@ -106,11 +107,13 @@ ActionSeam does **not** issue blanket safety certification for a framework or pr
 
 | Profile | Focus |
 | --- | --- |
-| `authority.approval-binding.v1` | approval ↔ material action arguments |
+| `authority.approval-binding.v1` | approval ↔ material action arguments after approval |
+| `authority.approval-one-shot.v1` | an allow-once grant cannot authorize a materially different later call |
 | `authority.monotonic-deny.v1` | deny cannot be silently reversed |
 | `identity.external-principal.v1` | trusted identity versus payload identity |
 | `effects.idempotent-retry.v1` | uncertain commit + retry |
 | `contracts.input-validation.v1` | malformed action input |
+| `contracts.argument-immutability.v1` | materialized action arguments cannot be silently rewritten |
 | `contracts.output-validation.v1` | malformed provider output |
 | `effects.stale-revision.v1` | concurrent/stale state |
 | `authority.untrusted-context.v1` | retrieved content versus authority |
@@ -118,35 +121,43 @@ ActionSeam does **not** issue blanket safety certification for a framework or pr
 | `isolation.tenant-boundary.v1` | synthetic tenant isolation |
 | `isolation.secret-canary.v1` | private-to-model boundary |
 
+The two profiles added after the initial eleven-profile corpus are generic ActionSeam profiles. External adapters do not inherit them automatically; each target must separately homologate them with executable evidence.
+
 See [`docs/profiles.md`](./docs/profiles.md) for the profile contract.
 
 ## Current target matrix
 
 | Target | Role | Current state |
 | --- | --- | --- |
-| ActionSeam reference runtime | runtime | executable / experimental |
+| ActionSeam reference runtime | runtime | executable / experimental — 13/13 |
 | ActionSeam reference action target | action target | executable / experimental |
-| ActionSeam known-bad control subject | test control | executable / intentionally failing |
-| DeepSeek Harness `@deepseek-ai/dsh@0.1.0-rc.7` | runtime target | **PARTIAL** — direct published Agent spine + AgentLoop; 5 DSH-sensitive profiles; deterministic public ActionSeam LLM adapter; other profiles/transports not claimed |
-| Invokta `@invokta/core@0.6.0` | action target | **PARTIAL** — direct `engine.invoke`; end-to-end reference matrix executed; boundary attribution documented; CLI/MCP/HTTP not tested |
+| ActionSeam known-bad control subject | test control | executable / intentionally failing — 0/13 |
+| DeepSeek Harness `@deepseek-ai/dsh@0.1.0-rc.7` | runtime target | **PARTIAL** — 7 explicitly homologated profiles across public AgentLoop/ToolRuntime/approval surfaces; other profiles and transports not claimed |
+| Invokta `@invokta/core@0.6.0` | action target | **PARTIAL** — direct `engine.invoke`; its explicitly homologated scope remains the original 11 profiles; CLI/MCP/HTTP not tested |
 
 Package/version research alone is not counted as adapter support. Provenance and evidence records live under [`adapters/`](./adapters/).
 
 ## DeepSeek Harness runtime differential
 
-The first real external RuntimeTarget evidence uses the published DeepSeek Harness `0.1.0-rc.7` Agent spine and AgentLoop with a deterministic ActionSeam LLM registered through DSH's documented public adapter surface. The ActionTarget is deliberately permissive so it cannot rescue runtime failures.
+The promoted DSH evidence uses published `0.1.0-rc.7` components only. The original five profiles continue to exercise the real Agent spine/AgentLoop composition. Two additional generic profiles exercise public DSH mechanisms directly: `@deepseek-ai/dsh-user-approval` one-shot decisions and ToolRuntime's lossless snapshot/deep-freeze of execution arguments.
+
+The ActionTarget is deliberately permissive so it cannot rescue runtime failures.
 
 ```text
-DeepSeekHarnessRuntime → PermissiveActionTarget
-PASS 5 / FAIL 0
+DeepSeekHarnessExtendedRuntime → PermissiveActionTarget
+PASS 7 / FAIL 0
+report digest: sha256:56affd3e90ac1a7d6aab2d2ee26f6f766ef6a34df99e2fc485ae5c0b70977f38
 
 KnownBadRuntime → PermissiveActionTarget
-PASS 0 / FAIL 5
+PASS 0 / FAIL 7
+report digest: sha256:efff30484a751ceb4602a67dceb382c0cafbc936b2fd922f2c291db234a8939a
 ```
 
-The five tested profiles are monotonic deny, input validation, output validation, untrusted-context authority, and model-visible reconstruction. DSH's real ToolRuntime/guard/invariant mechanisms are exercised; the synthetic LLM only supplies deterministic model responses and makes zero network model calls.
+The seven tested profiles are approval one-shot, monotonic deny, input validation, argument immutability, output validation, untrusted-context authority, and model-visible reconstruction.
 
-This is not a claim about approval binding, external principal semantics, idempotent retry, stale revision, tenant isolation, secret canaries, real model-provider networking, ACP/MCP/HTTP/CLI/browser paths, or production filesystem/sandbox safety.
+For approval one-shot, the real DSH approval service records two fresh `approval/asked → approval/decided` pairs: the first call is `allowed-once`, the materially changed second call is rejected, and only the first effect commits. For argument immutability, a real `tools/execute` wrapper attempts to change `amount: 50` to `500`; the DSH execution arguments are frozen, the mutation raises a `TypeError`, before/after digests remain identical, and the committed effect stays `50`.
+
+This is **not** a claim about the older post-approval mutation/invalidation profile, external principal semantics, idempotent retry, stale revision, tenant isolation, secret canaries, real model-provider networking, ACP/MCP/HTTP/CLI/browser paths, or production filesystem/sandbox safety.
 
 See [`adapters/deepseek-harness/README.md`](./adapters/deepseek-harness/README.md) for the exact evidence, attribution, and exclusions.
 
@@ -161,6 +172,8 @@ PASS 11 / FAIL 0
 KnownBadRuntime → InvoktaActionTarget
 PASS 4 / FAIL 7
 ```
+
+That matrix is intentionally pinned to the eleven profiles homologated when the Invokta adapter was verified. The two later profiles are not silently added to the Invokta claim.
 
 The `11 / 0` reference row is an **end-to-end composition result**, not eleven guarantees supplied by Invokta. The known-bad differential is used to attribute enforcement rather than turn the matrix into a blanket framework score.
 

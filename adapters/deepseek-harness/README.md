@@ -1,40 +1,43 @@
 # DeepSeek Harness runtime adapter
 
-**Status: PARTIAL / executable for the direct `Agent spine + AgentLoop` composition described below.**
+**Status: PARTIAL / executable for the exact public compositions described below.**
 
 This adapter targets the public DeepSeek Harness `0.1.0-rc.7` release at source snapshot `99f6f02fecdb7dff40c3fbc9470f5907c29f74ca`.
 
 ## What is actually running
 
-The candidate boots the real published `@deepseek-ai/dsh-agent-spine-demo@0.1.0-rc.7` inside a public Cordis `Context`. That spine mounts the real DSH LLM runtime, Session store, Tool runtime, Agent registry, Invariant registry, AgentLoop, and the package-owned AgentLoop invariant companion.
+The base candidate boots the real published `@deepseek-ai/dsh-agent-spine-demo@0.1.0-rc.7` inside a public Cordis `Context`. That spine mounts the real DSH LLM runtime, Session store, ToolRuntime, Agent registry, Invariant registry, AgentLoop, and the package-owned AgentLoop invariant companion.
 
-ActionSeam registers a deterministic synthetic `LlmAdapter` using the documented `ctx.llm.registerAdapter(...)` extension point. The adapter emits deterministic DSH stream chunks, including a real tool call, so CI needs no provider credential and makes no DeepSeek/OpenAI/model-provider network call. The synthetic LLM replaces only the model provider; it does **not** replace or mock the DSH AgentLoop, Session, ToolRuntime, guard pipeline, output validation, or invariant services.
+ActionSeam registers a deterministic synthetic `LlmAdapter` using the documented `ctx.llm.registerAdapter(...)` extension point. It emits deterministic DSH stream chunks so CI needs no provider credential and makes no DeepSeek/OpenAI/model-provider network call. The synthetic LLM replaces only the model provider; it does **not** replace or mock DSH's AgentLoop, Session, ToolRuntime, guard pipeline, validation, or invariant services.
 
-The ActionSeam synthetic effect is exposed as a real DSH tool using public `defineTool(...)` / `ctx.tools.register(...)`. Its body delegates the external effect to the ActionSeam `ActionTarget` supplied to `runtime.execute(...)`, keeping committed state synthetic while exercising DSH's actual tool dispatch path.
+For the two later profiles, `runtime-extended.js` keeps the already-homologated five-profile runtime unchanged and adds a profile-specific public composition. It mounts the published `@deepseek-ai/dsh-user-approval` service where approval semantics are required and directly exercises `ctx.tools.execute` where ToolRuntime argument integrity is the property under test. A no-op public LLM adapter is registered and throws if called, so those direct ToolRuntime scenarios cannot silently rely on model behavior.
+
+The ActionSeam synthetic effect is exposed as a real DSH tool using public `defineTool(...)` / `ctx.tools.register(...)`. Its body delegates the external effect to the supplied ActionSeam `ActionTarget`, keeping committed state synthetic while exercising DSH's actual tool path.
 
 ## Frozen published dependencies
 
-The adapter probe and candidate are frozen by `package-lock.json` and installed with `npm ci`:
+The adapter is frozen by the committed `package-lock.json` and installed with `npm ci`:
 
 - `@deepseek-ai/cordis@4.0.1`;
 - `@deepseek-ai/dsh-agent-spine-demo@0.1.0-rc.7`;
 - `@deepseek-ai/dsh-llm@0.1.0-rc.7`;
-- `@deepseek-ai/dsh-tools@0.1.0-rc.7`.
+- `@deepseek-ai/dsh-tools@0.1.0-rc.7`;
+- `@deepseek-ai/dsh-user-approval@0.1.0-rc.7`, resolved and frozen as the ToolRuntime approval peer in the committed lockfile and explicitly checked by CI with `npm ls`.
 
 No package-private DSH test helper or source import is used.
 
-## Executable evidence
+## Promoted executable evidence
 
-GitHub Actions run `32202501764` tested ActionSeam head `3e0cf8815806c9edfec63b9de70f06b62dbb366d` with fail-closed evidence steps and matrix metadata aligned to the resulting `PARTIAL` support state.
+GitHub Actions run `32204164840` tested ActionSeam head `6758d7bd67e846f78681bc6f846cdfceb252d621` with `npm ci`, fail-closed evidence steps, and the seven-profile differential matrix.
 
 Workflow artifact:
 
-- artifact id: `9347999573`;
-- artifact digest: `sha256:df7bfca0192a21b39d30f85843b16d1ac5e7c9d853a41283136ef37018a2d8f6`.
+- artifact id: `9348539981`;
+- artifact digest: `sha256:7f047ab24ebaf72e4cc68693da447af02182924811d14908ee8fdb09915bb1f6`.
 
-### Real AgentLoop round trip
+### Base AgentLoop and ToolRuntime evidence
 
-The evidence records:
+The original real AgentLoop round trip remains part of the gate:
 
 ```text
 synthetic public LlmAdapter
@@ -48,49 +51,79 @@ synthetic public LlmAdapter
   → final assistant response
 ```
 
-Observed high-signal facts include two LLM requests, one tool execution, `tools/pre-execute`, `tools/result`, and durable `turn/start`, `tool/call`, `tool/result`, and `turn/end` events, with zero network model calls.
-
-### Tool-boundary probe
-
-Direct public ToolRuntime probes established the actual upstream error semantics used by the adapter:
+The boundary probes also continue to establish the real upstream semantics used by the adapter:
 
 - malformed input: `INVALID_ARGS` / `ToolArgsError`, tool body calls `0`;
 - malformed output: `INVALID_TOOL_OUTPUT` / `ToolOutputError`, tool body calls `1`;
 - `tools/pre-execute` attempted allow followed by `ctx.tools.guard()` deny: final error, tool body calls `0`.
 
-The CI commands write JSON directly before printing it; a failing Node process therefore fails the workflow instead of being masked by a pipeline.
+### One-shot approval evidence
 
-## Five-profile differential matrix
+The new `authority.approval-one-shot.v1` profile uses the real published `@deepseek-ai/dsh-user-approval` service and ToolRuntime `ask` path.
 
-The first RuntimeTarget matrix deliberately uses ActionSeam's `PermissiveActionTarget`, which provides no validating safety net. The same target is then used with `KnownBadRuntime` as the control.
+Observed evidence:
 
 ```text
-DeepSeekHarnessRuntime → PermissiveActionTarget
-PASS 5 / FAIL 0
-report digest: sha256:137b921d4fbb117e445e5ae2048f3406f4a80449a7a9dd5849acaf7367cffcc9
+call 1: account-A
+approval/asked
+approval/decided: allowed-once
+tool body/effect: 1
+
+call 2: materially changed to account-B
+approval/asked
+approval/decided: rejected
+tool body/effect: 0 for call 2
+```
+
+The durable approval sequence is exactly `approval/asked → approval/decided → approval/asked → approval/decided`. Two fresh decisions are observed; the first `allowed-once` is not stored as a grant for the second call. Synthetic state contains only the first account-A effect.
+
+This is intentionally a **new generic profile**. It does not relabel `authority.approval-binding.v1`: that older profile requires a post-approval mutation to occur and then invalidate the approval, while DSH's public ToolRuntime prevents argument rewrite earlier in the path.
+
+### Argument immutability evidence
+
+The new `contracts.argument-immutability.v1` profile exercises the public ToolRuntime argument snapshot/deep-freeze boundary. An around-dispatch test wrapper attempts to rewrite `amount: 50` to `500` after materialization.
+
+Observed evidence:
+
+- `Object.isFrozen(exec.arguments) === true`;
+- the rewrite raises `TypeError` for the read-only `amount` property;
+- before/after argument digests remain identical;
+- `mutationApplied: false`;
+- the committed synthetic effect still has delta `50`, not `500`.
+
+ActionSeam owns the adversarial mutation attempt. DSH owns the immutable materialized execution arguments that prevent it from altering the effect.
+
+## Seven-profile differential matrix
+
+The matrix deliberately uses ActionSeam's `PermissiveActionTarget`, which provides no validating safety net. The same target is used with `KnownBadRuntime` as the control.
+
+```text
+DeepSeekHarnessExtendedRuntime → PermissiveActionTarget
+PASS 7 / FAIL 0
+report digest: sha256:56affd3e90ac1a7d6aab2d2ee26f6f766ef6a34df99e2fc485ae5c0b70977f38
 
 KnownBadRuntime → PermissiveActionTarget
-PASS 0 / FAIL 5
-report digest: sha256:94a8e301ba802279e7c23dc69096862e908165ceb4bd0cf84cba841f163942fa
+PASS 0 / FAIL 7
+report digest: sha256:efff30484a751ceb4602a67dceb382c0cafbc936b2fd922f2c291db234a8939a
 ```
 
 The matrix artifact explicitly records `evidenceSupports: PARTIAL`.
 
-The tested profiles are:
-
 | Profile | DSH mechanism exercised | Attribution |
 | --- | --- | --- |
-| `authority.monotonic-deny.v1` | an ActionSeam test hook attempts `allow` at `tools/pre-execute`; DSH `ctx.tools.guard()` still denies before body execution | **DSH-owned final monotonic veto** |
-| `contracts.input-validation.v1` | malformed string amount reaches real ToolRuntime and becomes `INVALID_ARGS` before body execution | **DSH-owned input validation** |
-| `contracts.output-validation.v1` | permissive target commits and returns malformed output; DSH emits `INVALID_TOOL_OUTPUT` after body execution | **DSH-owned output validation** |
-| `authority.untrusted-context.v1` | model-visible retrieved text triggers an ActionSeam test attempt to allow; DSH binding guard still denies with zero effect | **DSH-owned final guard; ActionSeam owns the adversarial allow attempt** |
-| `reconstruction.model-visible.v1` | ActionSeam verifies the material inputs/tool in the actual request received by the public LLM adapter while the spine runs DSH's package-owned AgentLoop invariant against durable Session reconstruction | **DSH-owned durable reconstruction invariant + ActionSeam structural evidence check** |
+| `authority.approval-one-shot.v1` | real `dsh-user-approval` `allowed-once` + ToolRuntime `ask`; second changed call creates a fresh durable approval request and rejection prevents body execution | **DSH-owned one-shot approval lifecycle** |
+| `authority.monotonic-deny.v1` | ActionSeam attempts `allow` at `tools/pre-execute`; DSH `ctx.tools.guard()` still denies before body execution | **DSH-owned final monotonic veto** |
+| `contracts.input-validation.v1` | malformed string amount becomes `INVALID_ARGS` before body execution | **DSH-owned input validation** |
+| `contracts.argument-immutability.v1` | ToolRuntime snapshots/deep-freezes arguments before policy; around-dispatch mutation fails and effect remains unchanged | **DSH-owned execution argument integrity** |
+| `contracts.output-validation.v1` | permissive target commits and returns malformed output; DSH emits `INVALID_TOOL_OUTPUT` | **DSH-owned output validation** |
+| `authority.untrusted-context.v1` | retrieved text drives an adversarial allow attempt; binding DSH guard still denies with zero effect | **DSH-owned final guard; ActionSeam owns the adversarial attempt** |
+| `reconstruction.model-visible.v1` | ActionSeam verifies material request fields while the spine runs DSH's package-owned AgentLoop durable reconstruction invariant | **DSH-owned reconstruction invariant + ActionSeam structural evidence check** |
 
-The `5 / 0` result is scoped to this exact composition and these five profiles. It is not a five-point framework safety score.
+The `7 / 0` result is scoped to these exact public compositions and these seven profiles. It is not a framework safety score.
 
-## Not claimed in V0
+## Still not claimed
 
-The following ActionSeam profiles are **not** included in the DeepSeek Harness `PARTIAL` claim:
+These ActionSeam profiles remain outside the DeepSeek Harness `PARTIAL` claim:
 
 - `authority.approval-binding.v1`;
 - `identity.external-principal.v1`;
@@ -99,16 +132,24 @@ The following ActionSeam profiles are **not** included in the DeepSeek Harness `
 - `isolation.tenant-boundary.v1`;
 - `isolation.secret-canary.v1`.
 
-Those properties need a DSH-owned control/observation surface or a separately justified composition before they can be tested without misattribution.
+The exclusions are deliberate:
 
-This V0 also does not claim:
+- approval binding has a different invariant shape from DSH's earlier immutable-argument prevention;
+- DSH Agent identity is not treated as a production authorization principal;
+- committed-effect deduplication and stale revision remain provider/action-target semantics unless a DSH-owned mechanism is proven;
+- DSH scope/visibility is not promoted into a tenant authorization claim;
+- no matching public DSH private-context classification mechanism has been proven for the secret-canary profile.
+
+This evidence also does not claim:
 
 - a real DeepSeek, OpenAI, or other network model-provider path;
 - ACP, MCP, HTTP, CLI, browser, or UI transport differential;
 - production identity-provider or tenant isolation semantics;
-- production filesystem, shell, sandbox, or approval safety;
+- production filesystem, shell, sandbox, or generalized approval safety;
 - distributed provider/effect semantics;
 - framework-wide compatibility or production safety certification.
+
+Transport differential is intentionally the next phase, after this profile expansion is merged and frozen.
 
 ## Reproduce
 

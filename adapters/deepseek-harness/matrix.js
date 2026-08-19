@@ -8,11 +8,13 @@ import { KnownBadRuntime } from '../../src/reference/runtime.js'
 import { PermissiveActionTarget } from '../../src/reference/action-target.js'
 import { buildReport } from '../../src/reporting/report.js'
 import { renderInspector } from '../../src/reporting/inspector.js'
-import { DeepSeekHarnessRuntime } from './runtime.js'
+import { DeepSeekHarnessExtendedRuntime } from './runtime-extended.js'
 
 const profileIds = [
+  'authority.approval-one-shot.v1',
   'authority.monotonic-deny.v1',
   'contracts.input-validation.v1',
+  'contracts.argument-immutability.v1',
   'contracts.output-validation.v1',
   'authority.untrusted-context.v1',
   'reconstruction.model-visible.v1',
@@ -25,7 +27,7 @@ const selected = profileIds.map((id) => {
 })
 
 const permissiveTarget = new PermissiveActionTarget()
-const dshRuntime = new DeepSeekHarnessRuntime()
+const dshRuntime = new DeepSeekHarnessExtendedRuntime()
 const dshRows = await runSuite({
   runtime: dshRuntime,
   actionTarget: permissiveTarget,
@@ -84,13 +86,15 @@ console.log(JSON.stringify({
     statuses: controlStatuses,
   },
   attributionBoundary: {
-    dshOwned: [
-      'authority.monotonic-deny.v1',
-      'contracts.input-validation.v1',
-      'contracts.output-validation.v1',
-      'authority.untrusted-context.v1',
-      'reconstruction.model-visible.v1',
-    ],
+    dshOwned: {
+      'authority.approval-one-shot.v1': '@deepseek-ai/dsh-user-approval allowed-once plus ToolRuntime ask integration; each call creates its own durable approval audit pair.',
+      'authority.monotonic-deny.v1': 'ToolRuntime monotonic guard after extensible pre-execute policy.',
+      'contracts.input-validation.v1': 'ToolRuntime argument validation before body execution.',
+      'contracts.argument-immutability.v1': 'ToolRuntime lossless argument snapshot + deep freeze before policy; around-dispatch cannot rewrite arguments.',
+      'contracts.output-validation.v1': 'ToolRuntime canonical output validation after body execution.',
+      'authority.untrusted-context.v1': 'Binding ToolRuntime guard remains final after an adversarial pre-execute allow attempt.',
+      'reconstruction.model-visible.v1': 'AgentLoop durable request-reconstruction invariant plus ActionSeam structural material verification.',
+    },
     actionTarget: 'PermissiveActionTarget intentionally provides no validating safety net.',
     notClaimed: [
       'authority.approval-binding.v1',

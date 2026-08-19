@@ -183,8 +183,96 @@ Profiles in this evidence set:
 - **Untrusted context:** ActionSeam model-visible retrieved content drives an adversarial allow attempt; DSH's binding guard still denies with no committed effect. The adversarial attempt is ActionSeam-owned; the final veto is DSH-owned.
 - **Model-visible reconstruction:** ActionSeam structurally verifies the exact material inputs/tool in the request received by the public LLM adapter while the published Agent spine runs DSH's package-owned AgentLoop invariant, which reconstructs request material from durable Session state and fails on divergence.
 
-The remaining six ActionSeam profiles are not part of this DeepSeek Harness V0 claim: approval binding, external principal, idempotent retry, stale revision, tenant boundary, and secret canary.
+The remaining six ActionSeam profiles were not part of this original DeepSeek Harness V0 claim: approval binding, external principal, idempotent retry, stale revision, tenant boundary, and secret canary.
 
 This evidence also does not cover a real network model provider, ACP/MCP/HTTP/CLI/browser transport differential, production identity/tenant semantics, production filesystem/shell/sandbox behavior, distributed effect semantics, or framework-wide production safety.
 
-The evidence pin names promoted matrix head `3e0cf8815806c9edfec63b9de70f06b62dbb366d`. Later documentation/provenance-only commits re-run CI as a regression gate but do not change the runtime/report semantics represented by the pinned report digests.
+The evidence pin names promoted matrix head `3e0cf8815806c9edfec63b9de70f06b62dbb366d`. Later evidence expands the profile set without rewriting this historical five-profile result.
+
+## 2026-08-19 — DeepSeek Harness attributable profile expansion to seven profiles
+
+This phase deliberately audited the six previously unclaimed V0 profiles before adding any new claim. None of those six were promoted by analogy. Instead, ActionSeam added two **generic** profiles whose invariant shapes map directly to public DSH mechanisms:
+
+- `authority.approval-one-shot.v1`;
+- `contracts.argument-immutability.v1`.
+
+The conforming reference runtime passes both new profiles and `KnownBadRuntime` deliberately fails both. External adapters do not inherit the new profiles automatically; Invokta remains explicitly limited to its previously homologated eleven-profile matrix.
+
+### Why the original six remain unclaimed
+
+- `authority.approval-binding.v1` requires an actual material post-approval mutation followed by invalidation of the old approval. DSH's public path prevents rewrite earlier rather than exposing that same invalidation scenario.
+- `identity.external-principal.v1` is not inferred from DSH Agent identity.
+- `effects.idempotent-retry.v1` and `effects.stale-revision.v1` remain provider/action-target semantics absent a proven DSH-owned mechanism.
+- `isolation.tenant-boundary.v1` is not inferred from DSH composition scopes, which are not promoted into an authorization boundary.
+- `isolation.secret-canary.v1` remains unclaimed because no matching public DSH private-context classification mechanism has been proven.
+
+### Promoted reproducible gate
+
+GitHub Actions run `32204164840` tested ActionSeam head `6758d7bd67e846f78681bc6f846cdfceb252d621` using `npm ci` from the committed lockfile. The lock already freezes `@deepseek-ai/dsh-user-approval@0.1.0-rc.7` as the ToolRuntime approval peer; CI explicitly includes it in the `npm ls` dependency evidence.
+
+Workflow artifact:
+
+- artifact id: `9348539981`;
+- artifact digest: `sha256:7f047ab24ebaf72e4cc68693da447af02182924811d14908ee8fdb09915bb1f6`.
+
+Observed matrix:
+
+```text
+DeepSeekHarnessExtendedRuntime → PermissiveActionTarget
+PASS 7
+FAIL 0
+report digest: sha256:56affd3e90ac1a7d6aab2d2ee26f6f766ef6a34df99e2fc485ae5c0b70977f38
+
+KnownBadRuntime → PermissiveActionTarget
+PASS 0
+FAIL 7
+report digest: sha256:efff30484a751ceb4602a67dceb382c0cafbc936b2fd922f2c291db234a8939a
+```
+
+The same deliberately permissive ActionTarget is used in both rows so it cannot mask runtime failures. The matrix artifact records `evidenceSupports: PARTIAL`.
+
+### Public one-shot approval mechanism
+
+The new approval profile mounts the real published `@deepseek-ai/dsh-user-approval` service and uses the real ToolRuntime `ask` path.
+
+Observed high-signal evidence:
+
+```text
+call 1: account-A
+approval/asked → approval/decided: allowed-once
+body/effect executes once
+
+call 2: changed to account-B
+approval/asked → approval/decided: rejected
+no second body/effect
+```
+
+The durable audit sequence contains two distinct `approval/asked → approval/decided` pairs. The first `allowed-once` does not become stored authority for the second materially different call. Synthetic state contains only the account-A effect.
+
+### Public immutable-argument mechanism
+
+The new argument-integrity profile performs an adversarial mutation attempt from `amount: 50` to `500` inside a real public `tools/execute` wrapper after ToolRuntime materialization.
+
+Observed high-signal evidence:
+
+- `Object.isFrozen(exec.arguments) === true`;
+- mutation raises `TypeError` for the read-only `amount` property;
+- before and after argument digests are identical;
+- `mutationApplied: false`;
+- committed synthetic delta remains `50`.
+
+ActionSeam owns the adversarial rewrite attempt. DSH owns the lossless argument snapshot/deep-freeze boundary that prevents the rewrite from altering dispatch.
+
+### Resulting DSH scope
+
+The seven evidence-backed profiles are now:
+
+- `authority.approval-one-shot.v1`;
+- `authority.monotonic-deny.v1`;
+- `contracts.input-validation.v1`;
+- `contracts.argument-immutability.v1`;
+- `contracts.output-validation.v1`;
+- `authority.untrusted-context.v1`;
+- `reconstruction.model-visible.v1`.
+
+The six profiles listed above remain unclaimed, and transport differential remains deliberately deferred to the next phase. No real model-provider networking, ACP/MCP/HTTP/CLI/browser path, production identity/tenant semantics, distributed effect semantics, or framework-wide safety certification is implied by this expansion.

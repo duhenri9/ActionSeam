@@ -6,21 +6,37 @@ import { profiles } from '../../src/profiles/index.js'
 import { runSuite } from '../../src/core/run-suite.js'
 import { InvoktaActionTarget, normalizeInvoktaEvent } from './action-target.js'
 
-test('real @invokta/core 0.6.0 completes the full reference-runtime profile matrix', async () => {
+const INVOKTA_PROFILE_IDS = new Set([
+  'authority.approval-binding.v1',
+  'authority.monotonic-deny.v1',
+  'identity.external-principal.v1',
+  'effects.idempotent-retry.v1',
+  'contracts.input-validation.v1',
+  'contracts.output-validation.v1',
+  'effects.stale-revision.v1',
+  'authority.untrusted-context.v1',
+  'reconstruction.model-visible.v1',
+  'isolation.tenant-boundary.v1',
+  'isolation.secret-canary.v1',
+])
+
+const invoktaProfiles = profiles.filter((profile) => INVOKTA_PROFILE_IDS.has(profile.id))
+
+test('real @invokta/core 0.6.0 completes its homologated reference-runtime profile matrix', async () => {
   const runtime = new ReferenceRuntime()
   const actionTarget = new InvoktaActionTarget()
-  const rows = await runSuite({ runtime, actionTarget, profiles })
+  const rows = await runSuite({ runtime, actionTarget, profiles: invoktaProfiles })
 
-  assert.equal(rows.length, 11)
+  assert.equal(rows.length, INVOKTA_PROFILE_IDS.size)
   assert.deepEqual(new Set(rows.map((row) => row.result.status)), new Set(['PASS']))
   assert.equal(actionTarget.metadata.version, '0.6.0')
   assert.equal(actionTarget.metadata.transport, 'direct')
 })
 
-test('Invokta boundary changes the known-bad differential instead of trivially passing or failing everything', async () => {
+test('Invokta boundary changes the known-bad differential inside its homologated scope', async () => {
   const runtime = new KnownBadRuntime()
   const actionTarget = new InvoktaActionTarget()
-  const rows = await runSuite({ runtime, actionTarget, profiles })
+  const rows = await runSuite({ runtime, actionTarget, profiles: invoktaProfiles })
   const pass = rows.filter((row) => row.result.status === 'PASS').map((row) => row.profileId)
   const fail = rows.filter((row) => row.result.status === 'FAIL').map((row) => row.profileId)
 
@@ -33,12 +49,14 @@ test('Invokta boundary changes the known-bad differential instead of trivially p
   assert.ok(fail.includes('authority.approval-binding.v1'))
   assert.ok(fail.includes('authority.monotonic-deny.v1'))
   assert.ok(fail.includes('reconstruction.model-visible.v1'))
+  assert.equal(rows.some((row) => row.profileId === 'authority.approval-one-shot.v1'), false)
+  assert.equal(rows.some((row) => row.profileId === 'contracts.argument-immutability.v1'), false)
 })
 
 test('Invokta engine events are captured as deterministic semantic adapter evidence', async () => {
   const runtime = new ReferenceRuntime()
   const actionTarget = new InvoktaActionTarget()
-  const profile = profiles.find((candidate) => candidate.id === 'contracts.input-validation.v1')
+  const profile = invoktaProfiles.find((candidate) => candidate.id === 'contracts.input-validation.v1')
   const [row] = await runSuite({ runtime, actionTarget, profiles: [profile] })
 
   assert.equal(row.result.status, 'PASS')
