@@ -1,6 +1,8 @@
 import { rename, writeFile } from 'node:fs/promises'
 
-export function createAtomicStatePublisher(path, snapshot) {
+export function createAtomicStatePublisher(path, snapshot, io = {}) {
+  const write = io.write ?? writeFile
+  const move = io.move ?? rename
   let queue = Promise.resolve()
   let revision = 0
 
@@ -10,8 +12,8 @@ export function createAtomicStatePublisher(path, snapshot) {
       ...snapshot(),
     }
     const staging = `${path}.partial`
-    await writeFile(staging, `${JSON.stringify(body, null, 2)}\n`, 'utf8')
-    await rename(staging, path)
+    await write(staging, `${JSON.stringify(body, null, 2)}\n`, 'utf8')
+    await move(staging, path)
     return body
   }
 
