@@ -69,7 +69,7 @@ await writeFile(resolve(output, 'deepseek-harness-raw-evidence.json'), `${JSON.s
 console.log(JSON.stringify({
   upstream: '@deepseek-ai/dsh@0.1.0-rc.7',
   upstreamCommit: '99f6f02fecdb7dff40c3fbc9470f5907c29f74ca',
-  supportStatus: 'NOT_IMPLEMENTED',
+  evidenceSupports: 'PARTIAL',
   candidateProfiles: profileIds,
   candidate: {
     pass: dshReport.summary.PASS,
