@@ -22,12 +22,13 @@
     "tools/result",
     "durable session events",
     "@deepseek-ai/dsh-agent-loop invariant companion",
-    "@deepseek-ai/dsh-user-approval allowed-once / approval audit lifecycle",
+    "@deepseek-ai/dsh-user-approval allowed-once / rejected / approval audit lifecycle",
     "@deepseek-ai/dsh-acp JSON-RPC stdio transport",
+    "@deepseek-ai/dsh-acp session/request_permission mapping",
     "@agentclientprotocol/sdk ClientSideConnection / ndJsonStream"
   ],
   "supportStatus": "PARTIAL",
-  "notes": "PARTIAL has two independent evidence dimensions: seven explicitly homologated runtime profiles on exact public DSH 0.1.0-rc.7 compositions, and one narrowly scoped ACP JSON-RPC stdio transport differential. The ACP transport evidence does not imply that all seven runtime profiles were executed over ACP.",
+  "notes": "PARTIAL has independent evidence dimensions: seven explicitly homologated runtime profiles, one ACP JSON-RPC stdio semantic baseline, and a separately verified ACP one-shot permission differential. ACP transport evidence does not imply that all seven runtime profiles were executed over ACP.",
   "resolvedDirectDependencies": {
     "@deepseek-ai/cordis": "4.0.1",
     "@deepseek-ai/dsh-agent-spine-demo": "0.1.0-rc.7",
@@ -73,6 +74,42 @@
         "negativeControlDetected": true,
         "negativeControlMismatch": "synthetic-effect"
       },
+      "permissionDifferential": {
+        "status": "PARTIAL",
+        "approvalPackage": "@deepseek-ai/dsh-user-approval@0.1.0-rc.7",
+        "testedHeadCommit": "af8558cb17c414a3fcb39008b43897b3734e384d",
+        "workflowRun": 32206488629,
+        "artifactId": 9349296445,
+        "artifactDigest": "sha256:b9cd1c5161dd3dc2a2098b76e2712fad441dd6531528c52dbb59121b03fec217",
+        "installMode": "npm ci from committed isolated transport lockfile",
+        "cases": {
+          "allow-once": {
+            "wireOption": "allow_once",
+            "dshOutcome": "allowed-once",
+            "directVsAcp": "PASS",
+            "toolExecutions": 1,
+            "committedEffect": true
+          },
+          "reject-once": {
+            "wireOption": "reject_once",
+            "dshOutcome": "rejected",
+            "directVsAcp": "PASS",
+            "toolExecutions": 0,
+            "committedEffect": false
+          }
+        },
+        "wireEvidence": [
+          "exact ACP session id preserved in session/request_permission",
+          "toolCallId preserved as actionseam-transport-call-1",
+          "options are exactly allow-once/allow_once and reject-once/reject_once",
+          "session/request_permission observed on real stdout JSON-RPC stream"
+        ],
+        "negativeControl": {
+          "detected": true,
+          "corruption": "inject allow-once effect into reject-once ACP result",
+          "mismatches": ["tool-executions", "effect"]
+        }
+      },
       "proven": [
         "initialize with expected prompt capability advertisement",
         "session/new with absolute cwd",
@@ -80,13 +117,14 @@
         "committed agent_message_chunk output",
         "stdout protocol purity: every non-empty line parses as JSON-RPC",
         "same material tool arguments as direct path",
-        "one tool execution on each path",
+        "one tool execution on each baseline path",
         "same committed synthetic effect semantics as direct path",
+        "one-shot permission allow/reject mapping over session/request_permission",
         "zero network model-provider calls"
       ],
       "notClaimed": [
         "graceful process shutdown",
-        "session/request_permission differential",
+        "cancelled permission response differential",
         "session/cancel differential",
         "multi-session isolation",
         "image prompts",
@@ -126,7 +164,8 @@
       "reconstruction.model-visible.v1": "durable AgentLoop request reconstruction invariant"
     },
     "transportOwned": {
-      "acp-jsonrpc-stdio": "published DSH ACP bridge owns JSON-RPC stdio session creation/prompt mapping and committed session update delivery; ActionSeam owns the direct comparator, synthetic fixture, child-process harness, and corruption control"
+      "acp-jsonrpc-stdio": "published DSH ACP bridge owns JSON-RPC stdio session creation/prompt mapping and committed session update delivery",
+      "acp-session-request-permission": "published DSH ACP bridge maps the DSH approval/request seam to ACP session/request_permission and maps allow-once/reject-once selections back to DSH one-shot outcomes"
     },
     "actionSeamOwnedTestScaffolding": [
       "deterministic/no-op synthetic LLM provider",
@@ -135,12 +174,13 @@
       "synthetic external state",
       "PermissiveActionTarget differential target",
       "structural verification of material model-visible request fields",
-      "ACP direct-vs-stdio differential comparator and corrupted-effect negative control"
+      "ACP direct-vs-stdio differential comparator and corrupted-effect negative control",
+      "ACP permission direct comparator and inverted-effect negative control"
     ]
   },
   "notTestedOrNotClaimedSurfaces": [
     "real network model provider",
-    "ACP permission/cancellation/multi-session/image sub-surfaces",
+    "ACP cancelled-permission/cancellation/multi-session/image sub-surfaces",
     "MCP",
     "HTTP transport",
     "CLI transport differential beyond the exact ACP child process",
