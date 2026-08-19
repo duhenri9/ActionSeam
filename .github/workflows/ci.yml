@@ -132,6 +132,8 @@ jobs:
           node-version: '22'
       - name: Install frozen ACP transport dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify cancellation harness failure paths
+        run: npm run test:cancel-harness
       - name: Preserve promoted ACP stdio baseline
         run: |
           node differential.js > transport-output.json
