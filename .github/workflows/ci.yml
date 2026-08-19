@@ -67,8 +67,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install frozen DSH probe dependencies
-        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Resolve exact DSH approval dependency for lock refresh
+        run: npm install --ignore-scripts --no-audit --no-fund
       - name: Verify public bootstrap surfaces
         run: npm run verify
       - name: Emit public bootstrap probe
@@ -87,10 +87,10 @@ jobs:
         run: |
           node matrix.js > matrix-output.json
           cat matrix-output.json
-      - name: Capture frozen dependency evidence
+      - name: Capture dependency lock refresh evidence
         run: |
           mkdir -p artifacts
-          npm ls @deepseek-ai/cordis @deepseek-ai/dsh-agent-spine-demo @deepseek-ai/dsh-llm @deepseek-ai/dsh-tools --json > artifacts/npm-tree.json
+          npm ls @deepseek-ai/cordis @deepseek-ai/dsh-agent-spine-demo @deepseek-ai/dsh-llm @deepseek-ai/dsh-tools @deepseek-ai/dsh-user-approval --json > artifacts/npm-tree.json
           cp package-lock.json artifacts/package-lock.json
           cp probe-output.json artifacts/probe-output.json
           cp round-trip-output.json artifacts/round-trip-output.json
