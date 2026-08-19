@@ -33,7 +33,30 @@ This runs `authority.approval-binding.v1` against ActionSeam's own known-bad tes
 
 The known-bad subject is test equipment. It is not a reproduction, score, or security assessment of DeepSeek Harness, Invokta, or another external project.
 
-## 3. Generate inspectable artifacts
+## 3. Author and execute a local profile
+
+```bash
+node examples/run-local-profile.mjs
+```
+
+This example defines a small profile object outside the shipped catalog, executes it against the reference subject, and asserts the expected committed effect.
+
+The example shows the current source-level profile shape:
+
+```text
+id + title + expectation
+scenario
+  trustedPrincipal
+  action
+  policy
+  context
+evaluate({ profile, scenario, run, snapshot })
+  -> PASS | FAIL | ...
+```
+
+A local example profile does **not** become a shipped ActionSeam profile merely because it runs. Promotion into the versioned catalog still requires the profile design, evidence model, counterexample behavior, documentation, and review expected by [`../docs/profiles.md`](../docs/profiles.md).
+
+## 4. Generate and inspect report artifacts
 
 ```bash
 node src/cli.js demo --subject reference --out artifacts/reference
@@ -56,7 +79,24 @@ node examples/inspect-report.mjs artifacts/known-bad/report.json
 
 The inspection example checks the report schema and digest shape before printing the summary and any failing counterexamples.
 
-## 4. Run one profile with the experimental CLI
+## 5. Inspect adapter provenance before reading a support claim
+
+```bash
+node examples/inspect-adapter-provenance.mjs
+node examples/inspect-adapter-provenance.mjs adapters/invokta/provenance.json
+```
+
+The example reads an adapter provenance record and surfaces:
+
+- exact upstream/package version;
+- observed upstream commit;
+- `PARTIAL` / `SUPPORTED` state;
+- explicitly supported profiles;
+- verified transport slices, when present.
+
+This is the intended reading order for external integration claims: **provenance and evidence first, headline support status second**.
+
+## 6. Run one shipped profile with the experimental CLI
 
 Reference subject:
 
@@ -72,7 +112,7 @@ node src/cli.js run authority.approval-binding.v1 --subject known-bad
 
 The known-bad command intentionally exits non-zero because the profile returns `FAIL`. In shell automation, treat that non-zero exit as expected test behavior only when the specific scenario is deliberately known-bad.
 
-## 5. Reproduce external adapter evidence
+## 7. Reproduce external adapter evidence
 
 External adapter work is isolated under `adapters/` and carries its own dependency freeze and scope boundary.
 
