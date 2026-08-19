@@ -9,7 +9,7 @@
 | clean-room reference runtime | experimental, executable |
 | clean-room reference action target | experimental, executable |
 | synthetic state/faults | experimental, executable |
-| 11 initial profiles | experimental, executable |
+| 13 shipped profiles | experimental, executable |
 | typed result vocabulary | experimental, executable |
 | report digest | experimental, executable |
 | counterexample output | experimental, executable |
@@ -19,10 +19,12 @@
 
 | Target | State |
 | --- | --- |
-| DeepSeek Harness | `PARTIAL` — real `0.1.0-rc.7` published Agent spine + AgentLoop evidence for 5 profiles with a deterministic public ActionSeam LLM adapter; remaining profiles/transports not claimed |
-| Invokta | `PARTIAL` — real `@invokta/core@0.6.0` direct `engine.invoke` evidence; CLI/MCP/HTTP not tested |
+| DeepSeek Harness | `PARTIAL` — real `0.1.0-rc.7` public Agent/ToolRuntime composition with executable evidence for 7 profiles; includes real one-shot approval and immutable-argument mechanisms; remaining profiles/transports not claimed |
+| Invokta | `PARTIAL` — real `@invokta/core@0.6.0` direct `engine.invoke` evidence over its explicitly homologated 11-profile scope; the two later profiles are not inherited automatically; CLI/MCP/HTTP not tested |
 
 No adapter should move to `PARTIAL` or `SUPPORTED` without executable evidence committed to this repository. A `PARTIAL` state must remain scoped to exact versions, configurations, transports/modes, profiles, and attribution boundaries.
+
+A profile being added to the ActionSeam catalog does **not** expand any external adapter's claim automatically. Each target must separately show a public, observable, attributable mechanism and executable differential evidence for that profile.
 
 ## Launch state
 
