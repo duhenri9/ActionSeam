@@ -77,12 +77,11 @@ async function run() {
       output: {
         schema: {
           type: 'object',
-          properties: {
-            ok: { type: 'boolean' },
-            revision: { type: 'integer' },
-          },
-          required: ['ok', 'revision'],
           additionalProperties: false,
+          properties: {
+            ok: { type: 'boolean', required: true },
+            revision: { type: 'integer', required: true },
+          },
         },
         render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }],
       },
