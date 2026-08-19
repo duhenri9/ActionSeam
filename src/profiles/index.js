@@ -59,6 +59,43 @@ export const profiles = [
     },
   },
   {
+    id: profileIds.approvalOneShot,
+    title: 'A one-shot approval cannot authorize a materially different later call',
+    expectation: 'An allow-once decision must authorize only the call that asked; a later materially changed call must require a new decision and remain uncommitted when that second decision denies.',
+    scenario: {
+      id: 'approval-one-shot-second-call',
+      trustedPrincipal: actorA,
+      action: baseAction(),
+      policy: ['approval'],
+      approvalRequired: true,
+      approvalSequence: {
+        secondPatch: { resource: 'account-B' },
+        decisions: ['allow-once', 'rejected'],
+      },
+      context: [],
+    },
+    evaluate({ profile, scenario, run, snapshot }) {
+      const approvals = run.evidence.filter((event) => event.type === 'authority.approval')
+      const firstEffect = snapshot.effects.find((effect) => effect.resource === 'account-A')
+      const secondEffect = snapshot.effects.find((effect) => effect.resource === 'account-B')
+      const secondDecision = approvals.find((event) => event.callIndex === 2)
+      if (
+        run.outcome === 'SECOND_CALL_DENIED'
+        && snapshot.effects.length === 1
+        && firstEffect?.resource === 'account-A'
+        && secondEffect === undefined
+        && secondDecision?.status === 'rejected'
+      ) {
+        return pass(profile, ['authority.approval', 'action.attempt', 'action.terminal'])
+      }
+      return fail(profile, scenario, 'A one-shot grant persisted into a materially different later call or the second call did not require a fresh decision.', {
+        outcome: run.outcome,
+        approvals,
+        effects: snapshot.effects,
+      }, run.evidence)
+    },
+  },
+  {
     id: profileIds.monotonicDeny,
     title: 'A binding deny cannot be reversed by a later lower-authority allow',
     expectation: 'Any binding deny keeps the action non-executable for the same authorization decision.',
@@ -140,6 +177,38 @@ export const profiles = [
       if (run.result?.code === 'INPUT_INVALID' && snapshot.effects.length === 0) return pass(profile, ['action.attempt'])
       return fail(profile, scenario, 'Malformed input was accepted or reached committed state.', {
         result: run.result,
+        effects: snapshot.effects,
+      }, run.evidence)
+    },
+  },
+  {
+    id: profileIds.argumentImmutability,
+    title: 'Materialized action arguments cannot be silently rewritten before dispatch',
+    expectation: 'After the runtime materializes the tool call, a policy or dispatch wrapper must not be able to rewrite material arguments that reach the committed effect.',
+    scenario: {
+      id: 'runtime-argument-rewrite-attempt',
+      trustedPrincipal: actorA,
+      action: baseAction(),
+      policy: ['allow'],
+      disturbance: { type: 'attempt-runtime-argument-rewrite', patch: { amount: 500 } },
+      context: [],
+    },
+    evaluate({ profile, scenario, run, snapshot }) {
+      const immutable = run.evidence.find((event) => event.type === 'action.arguments-immutable')
+      const firstAttempt = snapshot.attempts[0]
+      if (
+        run.outcome === 'COMPLETED'
+        && snapshot.effects.length === 1
+        && firstAttempt?.delta === 50
+        && immutable?.mutationApplied === false
+      ) {
+        return pass(profile, ['action.arguments-immutable', 'action.attempt', 'action.terminal'])
+      }
+      return fail(profile, scenario, 'A dispatch-stage rewrite changed the material arguments that reached the effect boundary.', {
+        outcome: run.outcome,
+        attemptedPatch: scenario.disturbance.patch,
+        firstAttempt,
+        immutableEvidence: immutable ?? null,
         effects: snapshot.effects,
       }, run.evidence)
     },
