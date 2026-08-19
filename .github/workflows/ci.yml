@@ -104,8 +104,6 @@ jobs:
           if-no-files-found: error
 
   deepseek-harness-acp-transport-probe:
-    permissions:
-      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -113,41 +111,27 @@ jobs:
         working-directory: adapters/deepseek-harness/acp-transport
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Resolve exact approval dependency for permission lock freeze
-        run: npm install --ignore-scripts --no-audit --no-fund
-      - name: Commit generated permission lockfile on internal branch
-        if: github.event_name == 'pull_request' && github.head_ref == 'feat/deepseek-harness-acp-permission-v0'
-        working-directory: .
-        run: |
-          if git diff --quiet -- adapters/deepseek-harness/acp-transport/package-lock.json; then
-            exit 0
-          fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add adapters/deepseek-harness/acp-transport/package-lock.json
-          git commit -m 'build: freeze ACP permission dependency'
-          git push origin HEAD:${GITHUB_HEAD_REF}
+      - name: Install frozen ACP permission dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Preserve promoted ACP stdio baseline
         run: |
           node differential.js > transport-output.json
           cat transport-output.json
-      - name: Probe direct vs ACP one-shot permission differential
+      - name: Run direct vs ACP one-shot permission differential
         run: |
           node permission-differential.js > permission-output.json
           cat permission-output.json
-      - name: Capture ACP permission probe evidence
+      - name: Capture frozen ACP permission evidence
         run: |
           mkdir -p artifacts
           npm ls @agentclientprotocol/sdk @deepseek-ai/cordis @deepseek-ai/dsh-acp @deepseek-ai/dsh-agent-spine-demo @deepseek-ai/dsh-llm @deepseek-ai/dsh-tools @deepseek-ai/dsh-user-approval --json > artifacts/npm-tree.json
           cp package-lock.json artifacts/package-lock.json
           cp transport-output.json artifacts/transport-output.json
           cp permission-output.json artifacts/permission-output.json
-      - name: Upload DeepSeek Harness ACP permission probe evidence
+      - name: Upload DeepSeek Harness ACP permission evidence
         uses: actions/upload-artifact@v4
         with:
           name: actionseam-deepseek-harness-acp-permission-probe
