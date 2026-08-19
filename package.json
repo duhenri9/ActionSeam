@@ -12,7 +12,7 @@
     "test": "node --test",
     "demo": "node src/cli.js demo --subject reference --out artifacts/reference",
     "demo:bad": "node src/cli.js demo --subject known-bad --out artifacts/known-bad",
-    "examples:check": "node examples/run-reference-suite.mjs && node examples/run-known-bad-profile.mjs && node examples/run-local-profile.mjs && node examples/inspect-adapter-provenance.mjs && node examples/inspect-adapter-provenance.mjs adapters/invokta/provenance.json",
+    "examples:check": "node examples/run-reference-suite.mjs && node examples/run-known-bad-profile.mjs && node examples/run-local-profile.mjs && node examples/bring-your-runtime.mjs && node examples/inspect-adapter-provenance.mjs && node examples/inspect-adapter-provenance.mjs adapters/invokta/provenance.json",
     "validate": "node scripts/validate-repository.js",
     "security:scan-history": "node scripts/scan-public-history-secrets.js",
     "check": "npm test && npm run validate && npm run examples:check && npm run demo && npm run demo:bad"
