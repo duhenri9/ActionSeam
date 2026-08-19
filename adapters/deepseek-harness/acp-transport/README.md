@@ -140,9 +140,9 @@ The evidence supports **pre-tool-dispatch cancellation only**. It does not claim
 
 Those are different properties and require different executable gates.
 
-## Final regression after cancellation promotion
+## Final reviewed regression after cancellation promotion
 
-After the cancellation evidence was promoted into provenance, GitHub Actions run `32244308363` re-ran the complete repository gate at head `4d13991fd9abe49c9879c196bd866c3614fc7d50`.
+After review hardening, GitHub Actions run `32245848133` re-ran the complete repository gate at head `3bdeaa96b63451d41520029972313b009f9dc325`.
 
 All five jobs passed:
 
@@ -152,7 +152,9 @@ All five jobs passed:
 - `deepseek-harness-public-probe`;
 - `deepseek-harness-acp-transport-probe`.
 
-The ACP artifact from that regression is `9361984278`, digest `sha256:1145978a27795343047fe386ceef3ec346022fc0f1f22b548954de4424055cce`.
+The ACP artifact from that final reviewed gate is `9362531859`, digest `sha256:54f0ca50be1f5cbaa95885e413de20f5de03be91b2c6bd9df3b3d46fc7d5f7e6`.
+
+Three reliability findings were fixed before merge: early adapter/callback failures now reject both cancellation observation channels, the in-flight ACP prompt rejection is tracked before teardown, and cross-process evidence is published atomically so a partial JSON record cannot be accepted.
 
 ## Why process termination is not part of the claim
 
