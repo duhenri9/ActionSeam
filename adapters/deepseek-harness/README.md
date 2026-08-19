@@ -9,7 +9,7 @@ ActionSeam targets the public DeepSeek Harness `0.1.0-rc.7` release at source sn
 | Dimension | Current scope |
 | --- | --- |
 | runtime-profile conformance | `PARTIAL` — 7 explicitly homologated ActionSeam profiles on public DSH runtime surfaces |
-| ACP JSON-RPC stdio transport | `PARTIAL` — one exact direct-vs-real-child-process semantic differential |
+| ACP JSON-RPC stdio transport | `PARTIAL` — real child-process semantic baseline plus separately verified one-shot `session/request_permission` allow/reject mapping |
 
 These dimensions do not inherit from each other. The ACP transport result does **not** mean the seven runtime profiles were executed over ACP.
 
@@ -31,7 +31,7 @@ The runtime adapter is frozen by `package-lock.json` and installed with `npm ci`
 - `@deepseek-ai/dsh-agent-spine-demo@0.1.0-rc.7`;
 - `@deepseek-ai/dsh-llm@0.1.0-rc.7`;
 - `@deepseek-ai/dsh-tools@0.1.0-rc.7`;
-- `@deepseek-ai/dsh-user-approval@0.1.0-rc.7`, frozen as the ToolRuntime approval peer and checked by CI.
+- `@deepseek-ai/dsh-user-approval@0.1.0-rc.7`.
 
 No package-private DSH test helper or source import is used.
 
@@ -56,15 +56,15 @@ report digest: sha256:efff30484a751ceb4602a67dceb382c0cafbc936b2fd922f2c291db234
 
 The ActionTarget is deliberately permissive in both rows, so it cannot rescue runtime failures.
 
-| Profile | Public DSH mechanism exercised |
-| --- | --- |
-| `authority.approval-one-shot.v1` | real `dsh-user-approval` `allowed-once` + ToolRuntime `ask`; changed second call receives a fresh durable approval request and rejection prevents body execution |
-| `authority.monotonic-deny.v1` | `tools/pre-execute` adversarial allow attempt followed by binding `ctx.tools.guard()` deny |
-| `contracts.input-validation.v1` | ToolRuntime `INVALID_ARGS` before body execution |
-| `contracts.argument-immutability.v1` | ToolRuntime lossless snapshot/deep-freeze before policy; around-dispatch rewrite fails and effect remains unchanged |
-| `contracts.output-validation.v1` | ToolRuntime `INVALID_TOOL_OUTPUT` after a malformed body return |
-| `authority.untrusted-context.v1` | adversarial model-visible allow attempt cannot defeat final DSH guard |
-| `reconstruction.model-visible.v1` | DSH AgentLoop durable reconstruction invariant plus ActionSeam structural request verification |
+Evidence-backed profiles:
+
+- `authority.approval-one-shot.v1` — real `dsh-user-approval` one-shot lifecycle;
+- `authority.monotonic-deny.v1` — final `ctx.tools.guard()` veto;
+- `contracts.input-validation.v1` — ToolRuntime `INVALID_ARGS` before body execution;
+- `contracts.argument-immutability.v1` — lossless snapshot/deep-freeze before policy/dispatch wrappers;
+- `contracts.output-validation.v1` — ToolRuntime `INVALID_TOOL_OUTPUT`;
+- `authority.untrusted-context.v1` — adversarial allow cannot defeat the final guard;
+- `reconstruction.model-visible.v1` — AgentLoop durable reconstruction invariant plus ActionSeam structural verification.
 
 ### One-shot approval evidence
 
@@ -78,11 +78,9 @@ approval/asked → approval/decided: rejected
 no second body/effect
 ```
 
-The first grant is not persisted as authority for the second call.
-
 ### Argument immutability evidence
 
-An actual public `tools/execute` wrapper attempts `amount: 50 → 500` after ToolRuntime materialization:
+A public `tools/execute` wrapper attempts `amount: 50 → 500` after ToolRuntime materialization:
 
 - `Object.isFrozen(exec.arguments) === true`;
 - mutation raises `TypeError`;
@@ -90,58 +88,65 @@ An actual public `tools/execute` wrapper attempts `amount: 50 → 500` after Too
 - `mutationApplied: false`;
 - committed delta remains `50`.
 
-ActionSeam owns the adversarial mutation attempt. DSH owns the immutable execution arguments that prevent it from changing dispatch.
-
 ## ACP JSON-RPC stdio transport evidence
 
-Transport is tested in the isolated [`acp-transport/`](./acp-transport/) package with its own frozen lockfile.
+Transport lives in the isolated [`acp-transport/`](./acp-transport/) package with its own frozen lockfile.
 
-Exact transport subject:
+Exact subject:
 
 - `@deepseek-ai/dsh-acp@0.1.0-rc.7`;
+- `@deepseek-ai/dsh-user-approval@0.1.0-rc.7` for the permission sub-surface;
 - official `@agentclientprotocol/sdk@0.25.1`;
-- real Node child process;
-- JSON-RPC over the process stdin/stdout;
-- same ActionSeam deterministic LLM/tool/effect fixture as the direct baseline;
+- real Node child processes;
+- JSON-RPC over stdin/stdout;
 - zero network model-provider calls.
 
-Promoted transport evidence:
+### Promoted baseline
 
-- ActionSeam head: `205d992c164fd06b76aef79cc66012861c98f782`;
-- GitHub Actions run: `32205337074`;
-- artifact id: `9348915317`;
-- artifact digest: `sha256:85481ca768c6402aa0849883f1e386b8ea0902cb66099da50d750df613c3a8d0`.
+- head: `205d992c164fd06b76aef79cc66012861c98f782`;
+- run: `32205337074`;
+- artifact: `9348915317`;
+- digest: `sha256:85481ca768c6402aa0849883f1e386b8ea0902cb66099da50d750df613c3a8d0`.
 
-Direct and ACP paths both produce:
+Direct and ACP both preserve exactly one execution of `tenant-A / transport-account-A / amount 7`, revision `1`, value `7`, final text `actionseam-transport-complete`, and zero network model calls. ACP additionally proves `initialize`, `session/new`, `session/prompt`, `end_turn`, committed `agent_message_chunk`, and stdout protocol purity. A corrupted-effect `+1000` negative control is detected as `synthetic-effect`.
+
+### Promoted one-shot permission differential
+
+- head: `af8558cb17c414a3fcb39008b43897b3734e384d`;
+- run: `32206488629`;
+- artifact: `9349296445`;
+- digest: `sha256:b9cd1c5161dd3dc2a2098b76e2712fad441dd6531528c52dbb59121b03fec217`.
+
+The same public DSH ToolRuntime `ask` seam is exercised direct and over real ACP stdio.
+
+`allow-once`:
 
 ```text
+ACP method: session/request_permission
+session id: exact active ACP session
+toolCallId: actionseam-transport-call-1
+options: allow-once/allow_once, reject-once/reject_once
+DSH outcome: allowed-once
 tool executions: 1
-arguments: tenant-A / transport-account-A / amount 7
 committed effect: revision 1 / value 7
-final text: actionseam-transport-complete
-network model calls: 0
 ```
 
-ACP-specific observations:
+`reject-once`:
 
 ```text
-initialize: success
-prompt capabilities: image=false, audio=false, embeddedContext=false
-session/new: success
-session/prompt: end_turn
-committed update: agent_message_chunk
-stdout frames: 4
-stdout protocol purity: true
-stderr bytes: 0
+same exact permission request identity/options
+DSH outcome: rejected
+tool executions: 0
+committed effect: none
 ```
 
-A deliberate negative control changes the ACP effect value by `+1000`; the comparator detects `synthetic-effect`. A comparator that missed that corruption would fail CI.
+Both direct-vs-ACP permission cases pass with no mismatches. The negative control injects the real allow effect into the real reject result; the comparator detects both `tool-executions` and `effect` divergence.
 
-See [`acp-transport/README.md`](./acp-transport/README.md) for the complete transport boundary and reproduction command.
+See [`acp-transport/README.md`](./acp-transport/README.md) for the full transport evidence and reproduction commands.
 
 ## Still not claimed — runtime profiles
 
-These ActionSeam profiles remain outside the DSH runtime-profile `PARTIAL` claim:
+These profiles remain outside the DSH runtime-profile `PARTIAL` claim:
 
 - `authority.approval-binding.v1`;
 - `identity.external-principal.v1`;
@@ -150,14 +155,12 @@ These ActionSeam profiles remain outside the DSH runtime-profile `PARTIAL` claim
 - `isolation.tenant-boundary.v1`;
 - `isolation.secret-canary.v1`.
 
-The exclusions are deliberate: the public DSH mechanism must match the invariant shape rather than merely resemble it.
-
 ## Still not claimed — transport/protocol surfaces
 
-The ACP baseline does not claim:
+Current ACP transport evidence does not claim:
 
 - graceful process shutdown;
-- `session/request_permission` differential;
+- cancelled permission-response differential;
 - `session/cancel` differential;
 - multi-session isolation;
 - image prompts;
@@ -165,20 +168,14 @@ The ACP baseline does not claim:
 - MCP equivalence;
 - HTTP transport;
 - Web/GUI RPC equivalence;
-- CLI/package behavior beyond the exact ACP child process;
+- CLI/package behavior beyond the exact ACP child processes;
 - production safety.
 
-Other system-wide exclusions remain:
-
-- a real DeepSeek, OpenAI, or other network model-provider path;
-- production identity-provider or tenant isolation semantics;
-- production filesystem, shell, sandbox, or generalized approval safety;
-- distributed provider/effect semantics;
-- framework-wide compatibility or production safety certification.
+Other system-wide exclusions remain: real network model providers, production identity/tenant semantics, production filesystem/shell/sandbox safety, distributed effect semantics, and framework-wide certification.
 
 ## Reproduce runtime-profile evidence
 
-From `adapters/deepseek-harness/` on Node.js 22+:
+From `adapters/deepseek-harness/`:
 
 ```bash
 npm ci --ignore-scripts --no-audit --no-fund
@@ -196,4 +193,5 @@ From `adapters/deepseek-harness/acp-transport/`:
 ```bash
 npm ci --ignore-scripts --no-audit --no-fund
 node differential.js
+node permission-differential.js
 ```
