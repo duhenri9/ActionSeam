@@ -6,7 +6,7 @@ ActionSeam is an experimental open-source project by **WM3 Digital** for testing
 
 It runs the same synthetic profile against an exact runtime/action-target configuration, gathers inspectable evidence, and returns a scoped result. A failure should produce something a maintainer can reproduce — not just a score.
 
-> **Maturity: EXPERIMENTAL / community preview.** The reference lab is executable. DeepSeek Harness `0.1.0-rc.7` and Invokta `0.6.0` both have narrowly scoped **PARTIAL** executable evidence. Community preview invites public reproduction and contribution; it is not a package release or production-safety certification.
+> **Maturity: EXPERIMENTAL / community preview.** The reference lab is executable. DeepSeek Harness `0.1.0-rc.7` and Invokta `0.6.0` both have narrowly scoped **PARTIAL** executable evidence. DeepSeek Harness also has a separate **PARTIAL ACP JSON-RPC stdio transport differential**; that transport result does not imply all runtime profiles were tested over ACP. Community preview invites public reproduction and contribution; it is not a package release or production-safety certification.
 
 ## Community preview boundary
 
@@ -86,6 +86,7 @@ ActionSeam currently exercises questions such as:
 - Can the material model-visible request be reconstructed from durable evidence?
 - Can tenant-A mutate tenant-B synthetic state?
 - Does a private canary cross the model-visible boundary?
+- Does a real transport preserve the same material tool/effect semantics as a direct runtime path?
 
 ## Result states
 
@@ -132,14 +133,14 @@ See [`docs/profiles.md`](./docs/profiles.md) for the profile contract.
 | ActionSeam reference runtime | runtime | executable / experimental — 13/13 |
 | ActionSeam reference action target | action target | executable / experimental |
 | ActionSeam known-bad control subject | test control | executable / intentionally failing — 0/13 |
-| DeepSeek Harness `@deepseek-ai/dsh@0.1.0-rc.7` | runtime target | **PARTIAL** — 7 explicitly homologated profiles across public AgentLoop/ToolRuntime/approval surfaces; other profiles and transports not claimed |
+| DeepSeek Harness `@deepseek-ai/dsh@0.1.0-rc.7` | runtime target | **PARTIAL** — 7 explicitly homologated runtime profiles; separately **PARTIAL** for one exact ACP JSON-RPC stdio direct-vs-transport differential |
 | Invokta `@invokta/core@0.6.0` | action target | **PARTIAL** — direct `engine.invoke`; its explicitly homologated scope remains the original 11 profiles; CLI/MCP/HTTP not tested |
 
 Package/version research alone is not counted as adapter support. Provenance and evidence records live under [`adapters/`](./adapters/).
 
 ## DeepSeek Harness runtime differential
 
-The promoted DSH evidence uses published `0.1.0-rc.7` components only. The original five profiles continue to exercise the real Agent spine/AgentLoop composition. Two additional generic profiles exercise public DSH mechanisms directly: `@deepseek-ai/dsh-user-approval` one-shot decisions and ToolRuntime's lossless snapshot/deep-freeze of execution arguments.
+The promoted DSH runtime evidence uses published `0.1.0-rc.7` components only. The original five profiles continue to exercise the real Agent spine/AgentLoop composition. Two additional generic profiles exercise public DSH mechanisms directly: `@deepseek-ai/dsh-user-approval` one-shot decisions and ToolRuntime's lossless snapshot/deep-freeze of execution arguments.
 
 The ActionTarget is deliberately permissive so it cannot rescue runtime failures.
 
@@ -157,9 +158,35 @@ The seven tested profiles are approval one-shot, monotonic deny, input validatio
 
 For approval one-shot, the real DSH approval service records two fresh `approval/asked → approval/decided` pairs: the first call is `allowed-once`, the materially changed second call is rejected, and only the first effect commits. For argument immutability, a real `tools/execute` wrapper attempts to change `amount: 50` to `500`; the DSH execution arguments are frozen, the mutation raises a `TypeError`, before/after digests remain identical, and the committed effect stays `50`.
 
-This is **not** a claim about the older post-approval mutation/invalidation profile, external principal semantics, idempotent retry, stale revision, tenant isolation, secret canaries, real model-provider networking, ACP/MCP/HTTP/CLI/browser paths, or production filesystem/sandbox safety.
+This runtime-profile result is **not** a claim about the older post-approval mutation/invalidation profile, external principal semantics, idempotent retry, stale revision, tenant isolation, secret canaries, or production filesystem/sandbox safety.
 
-See [`adapters/deepseek-harness/README.md`](./adapters/deepseek-harness/README.md) for the exact evidence, attribution, and exclusions.
+See [`adapters/deepseek-harness/README.md`](./adapters/deepseek-harness/README.md) for the exact runtime evidence, attribution, and exclusions.
+
+## DeepSeek Harness ACP stdio transport differential
+
+Transport is tracked independently from runtime-profile conformance. The first promoted transport evidence compares the same deterministic DSH tool/effect scenario over:
+
+1. a direct published AgentLoop/ToolRuntime path; and
+2. a **real child process** running public `@deepseek-ai/dsh-acp@0.1.0-rc.7`, driven over stdin/stdout JSON-RPC by official `@agentclientprotocol/sdk@0.25.1`.
+
+Both paths produce exactly one tool execution with `tenant-A / transport-account-A / amount 7`, the same revision-1/value-7 synthetic effect, zero network model calls, and final text `actionseam-transport-complete`.
+
+The ACP path additionally proves `initialize`, `session/new`, `session/prompt`, `end_turn`, committed `agent_message_chunk` delivery, and stdout protocol purity. All four observed stdout frames parse as JSON-RPC; stderr is empty.
+
+A deliberate negative control changes the captured ACP effect value by `+1000`; the comparator detects `synthetic-effect`, proving the equality check is not tautological.
+
+Promoted ACP evidence:
+
+```text
+head:     205d992c164fd06b76aef79cc66012861c98f782
+CI run:   32205337074
+artifact: 9348915317
+sha256:   85481ca768c6402aa0849883f1e386b8ea0902cb66099da50d750df613c3a8d0
+```
+
+This ACP `PARTIAL` result does **not** claim graceful shutdown, permission differential, cancellation, multi-session isolation, images, MCP, HTTP, Web/GUI RPC, CLI equivalence beyond this exact child process, all seven runtime profiles over ACP, or production safety.
+
+See [`adapters/deepseek-harness/acp-transport/README.md`](./adapters/deepseek-harness/acp-transport/README.md).
 
 ## Invokta action-boundary differential
 
@@ -250,7 +277,7 @@ The documentation separates principles, architecture, scope/limits, result seman
 
 ## Contributing
 
-Bring a runtime, an action boundary, a profile, or a smaller counterexample.
+Bring a runtime, an action boundary, a profile, a transport differential, or a smaller counterexample.
 
 Before contributing, read [`CONTRIBUTING.md`](./CONTRIBUTING.md). Potentially sensitive upstream findings should follow [`SECURITY.md`](./SECURITY.md) before public disclosure.
 
