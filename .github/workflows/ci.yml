@@ -55,3 +55,33 @@ jobs:
           name: actionseam-invokta-evidence
           path: adapters/invokta/artifacts/
           if-no-files-found: error
+
+  deepseek-harness-public-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: adapters/deepseek-harness
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resolve published DSH release dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify public bootstrap surfaces
+        run: npm run verify
+      - name: Emit public bootstrap probe
+        run: npm run probe | tee probe-output.json
+      - name: Capture resolved dependency evidence
+        run: |
+          mkdir -p artifacts
+          npm ls @deepseek-ai/cordis @deepseek-ai/dsh-agent-spine-demo @deepseek-ai/dsh-llm @deepseek-ai/dsh-tools --json > artifacts/npm-tree.json
+          cp package-lock.json artifacts/package-lock.json
+          cp probe-output.json artifacts/probe-output.json
+      - name: Upload DeepSeek Harness probe evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: actionseam-deepseek-harness-public-probe
+          path: adapters/deepseek-harness/artifacts/
+          if-no-files-found: error
