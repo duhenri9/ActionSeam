@@ -31,7 +31,7 @@ Typical responsibilities:
 
 A transport differential compares the same bounded semantic operation across two concrete paths and asks whether material input, tool invocation, committed effect, terminal output, and protocol-specific evidence are preserved.
 
-Transport evidence does not automatically inherit runtime-profile evidence. A runtime may have seven verified profiles while only one narrow scenario is verified over a given transport.
+Transport evidence does not automatically inherit runtime-profile evidence. A runtime may have seven verified profiles while only narrow scenarios or methods are verified over a given transport.
 
 A promoted transport differential should:
 
@@ -47,10 +47,10 @@ A promoted transport differential should:
 | Target | Role | Evidence-backed state |
 | --- | --- | --- |
 | DeepSeek Harness `0.1.0-rc.7` | runtime | `PARTIAL` — published Agent/ToolRuntime composition with 7 attributable profiles, including public one-shot approval and immutable-argument enforcement |
-| DeepSeek Harness `@deepseek-ai/dsh-acp@0.1.0-rc.7` | transport | `PARTIAL` — one exact direct-vs-real-child-process ACP JSON-RPC stdio differential; initialize/newSession/prompt/committed output/effect preservation proven; permission/cancel/multi-session/images and other protocols unclaimed |
+| DeepSeek Harness `@deepseek-ai/dsh-acp@0.1.0-rc.7` | transport | `PARTIAL` — real child-process ACP JSON-RPC stdio baseline plus separately verified one-shot `session/request_permission` allow/reject differential; cancelled permission, cancel, multi-session, images and other protocols unclaimed |
 | Invokta `@invokta/core@0.6.0` | action target | `PARTIAL` — direct `engine.invoke` evidence over its explicitly homologated 11-profile scope |
 
-`PARTIAL` is deliberately narrow. It does not mean every ActionSeam profile applies to the target, every upstream transport has been tested, or the upstream project is production-safe.
+`PARTIAL` is deliberately narrow. It does not mean every ActionSeam profile applies to the target, every upstream transport or transport method has been tested, or the upstream project is production-safe.
 
 DeepSeek Harness currently claims these seven runtime profiles for the exact public compositions documented under `adapters/deepseek-harness/`:
 
@@ -64,8 +64,13 @@ DeepSeek Harness currently claims these seven runtime profiles for the exact pub
 
 The original `authority.approval-binding.v1` remains unclaimed: DSH prevents argument rewrite before dispatch, but the current ActionSeam profile specifically requires a material post-approval mutation to occur and then invalidate the old approval. ActionSeam does not redefine that profile just to manufacture compatibility.
 
-The separate ACP transport claim currently proves only one deterministic text/tool/effect round trip over real child-process stdio JSON-RPC using the official ACP SDK. It does not say the seven runtime profiles were executed over ACP.
+The separate ACP transport claim currently proves two independently gated slices over real child-process stdio JSON-RPC using the official ACP SDK:
+
+1. one deterministic text/tool/effect/final-answer baseline;
+2. one-shot `session/request_permission` mapping for both allow and reject decisions, including exact session/tool-call identity and effect/no-effect outcomes.
+
+Neither slice says the seven runtime profiles were executed over ACP.
 
 Invokta remains limited to the eleven profiles it previously homologated. The two later generic profiles do not become Invokta claims merely because they exist in the global catalog.
 
-MCP integration, HTTP, Web/GUI RPC, ACP permission/cancellation/multi-session behavior, and broader CLI/package differentials remain distinct future gates. See each adapter README and provenance record for exact versions, evidence, attribution, and exclusions.
+ACP cancelled-permission behavior, `session/cancel`, multi-session isolation, images, MCP integration, HTTP, Web/GUI RPC, and broader CLI/package differentials remain distinct future gates. See each adapter README and provenance record for exact versions, evidence, attribution, and exclusions.
