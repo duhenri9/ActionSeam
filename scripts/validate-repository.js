@@ -31,7 +31,9 @@ const required = [
   'examples/README.md',
   'examples/run-reference-suite.mjs',
   'examples/run-known-bad-profile.mjs',
+  'examples/run-local-profile.mjs',
   'examples/inspect-report.mjs',
+  'examples/inspect-adapter-provenance.mjs',
   'adapters/deepseek-harness/provenance.json',
   'adapters/invokta/provenance.json',
 ]
