@@ -22,6 +22,12 @@ export class PreDispatchCancelAdapter extends LlmAdapter {
     super()
     this.#onStart = onStart
     this.#onAbort = onAbort
+
+    // These deferreds are observation channels for the probe. Mark them as
+    // internally handled so an early stream failure cannot become a process-
+    // level unhandled rejection before the harness attaches its real await.
+    this.#started.promise.catch(() => {})
+    this.#aborted.promise.catch(() => {})
   }
 
   whenStarted() {
@@ -33,62 +39,71 @@ export class PreDispatchCancelAdapter extends LlmAdapter {
   }
 
   async * stream(options) {
-    this.requests.push({
-      model: options.model,
-      messages: structuredClone(options.messages),
-      tools: structuredClone(options.tools ?? []),
-      sessionId: options.sessionId ?? null,
-      signalPresent: options.signal instanceof AbortSignal,
-    })
-
-    if (this.requests.length !== 1) {
-      throw new Error(`Cancellation probe expected one model request, got ${this.requests.length}.`)
-    }
-
-    const serializedMessages = JSON.stringify(options.messages)
-    const serializedTools = JSON.stringify(options.tools ?? [])
-    if (!serializedMessages.includes(CANCEL_USER_TEXT)) {
-      throw new Error('Cancellation probe input did not reach the real DSH model request.')
-    }
-    if (!serializedTools.includes(CANCEL_TOOL_NAME)) {
-      throw new Error('Cancellation probe tool was not visible in the real DSH model request.')
-    }
-    if (!(options.signal instanceof AbortSignal)) {
-      throw new Error('Cancellation probe model request did not receive an AbortSignal.')
-    }
-
-    const startEvidence = {
-      requestCount: this.requests.length,
-      sessionId: options.sessionId ?? null,
-      signalPresent: true,
-      signalAbortedAtStart: options.signal.aborted,
-      networkModelCalls: 0,
-    }
-    await this.#onStart?.(startEvidence)
-    this.#started.resolve(structuredClone(startEvidence))
-
-    if (!options.signal.aborted) {
-      await new Promise((resolve) => {
-        options.signal.addEventListener('abort', resolve, { once: true })
+    try {
+      this.requests.push({
+        model: options.model,
+        messages: structuredClone(options.messages),
+        tools: structuredClone(options.tools ?? []),
+        sessionId: options.sessionId ?? null,
+        signalPresent: options.signal instanceof AbortSignal,
       })
-    }
 
-    this.abortObserved = true
-    const abortEvidence = {
-      requestCount: this.requests.length,
-      sessionId: options.sessionId ?? null,
-      signalAborted: options.signal.aborted,
-      abortReason: options.signal.reason instanceof Error
-        ? options.signal.reason.message
-        : String(options.signal.reason ?? 'aborted'),
-      networkModelCalls: 0,
-    }
-    await this.#onAbort?.(abortEvidence)
-    this.#aborted.resolve(structuredClone(abortEvidence))
+      if (this.requests.length !== 1) {
+        throw new Error(`Cancellation probe expected one model request, got ${this.requests.length}.`)
+      }
 
-    throw options.signal.reason instanceof Error
-      ? options.signal.reason
-      : new Error('ActionSeam cancellation probe aborted before tool dispatch.')
+      const serializedMessages = JSON.stringify(options.messages)
+      const serializedTools = JSON.stringify(options.tools ?? [])
+      if (!serializedMessages.includes(CANCEL_USER_TEXT)) {
+        throw new Error('Cancellation probe input did not reach the real DSH model request.')
+      }
+      if (!serializedTools.includes(CANCEL_TOOL_NAME)) {
+        throw new Error('Cancellation probe tool was not visible in the real DSH model request.')
+      }
+      if (!(options.signal instanceof AbortSignal)) {
+        throw new Error('Cancellation probe model request did not receive an AbortSignal.')
+      }
+
+      const startEvidence = {
+        requestCount: this.requests.length,
+        sessionId: options.sessionId ?? null,
+        signalPresent: true,
+        signalAbortedAtStart: options.signal.aborted,
+        networkModelCalls: 0,
+      }
+      await this.#onStart?.(startEvidence)
+      this.#started.resolve(structuredClone(startEvidence))
+
+      if (!options.signal.aborted) {
+        await new Promise((resolve) => {
+          options.signal.addEventListener('abort', resolve, { once: true })
+        })
+      }
+
+      this.abortObserved = true
+      const abortEvidence = {
+        requestCount: this.requests.length,
+        sessionId: options.sessionId ?? null,
+        signalAborted: options.signal.aborted,
+        abortReason: options.signal.reason instanceof Error
+          ? options.signal.reason.message
+          : String(options.signal.reason ?? 'aborted'),
+        networkModelCalls: 0,
+      }
+      await this.#onAbort?.(abortEvidence)
+      this.#aborted.resolve(structuredClone(abortEvidence))
+
+      throw options.signal.reason instanceof Error
+        ? options.signal.reason
+        : new Error('ActionSeam cancellation probe aborted before tool dispatch.')
+    } catch (error) {
+      // Promise resolver calls after an earlier resolve/reject are no-ops. This
+      // therefore preserves successfully captured evidence while making every
+      // validation/callback failure observable by both probe wait points.
+      this.#started.reject(error)
+      this.#aborted.reject(error)
+      throw error
+    }
   }
 }
 
