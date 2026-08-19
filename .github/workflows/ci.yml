@@ -72,11 +72,17 @@ jobs:
       - name: Verify public bootstrap surfaces
         run: npm run verify
       - name: Emit public bootstrap probe
-        run: npm run probe | tee probe-output.json
+        run: |
+          node probe.js > probe-output.json
+          cat probe-output.json
       - name: Exercise real DSH AgentLoop tool round trip
-        run: node round-trip.js | tee round-trip-output.json
+        run: |
+          node round-trip.js > round-trip-output.json
+          cat round-trip-output.json
       - name: Probe DSH tool-boundary enforcement
-        run: node boundary-probe.js | tee boundary-probe-output.json
+        run: |
+          node boundary-probe.js > boundary-probe-output.json
+          cat boundary-probe-output.json
       - name: Capture frozen dependency evidence
         run: |
           mkdir -p artifacts
