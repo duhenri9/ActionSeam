@@ -6,7 +6,7 @@ ActionSeam is an experimental open-source project by **WM3 Digital** for testing
 
 It runs the same synthetic profile against an exact runtime/action-target configuration, gathers inspectable evidence, and returns a scoped result. A failure should produce something a maintainer can reproduce — not just a score.
 
-> **Maturity: EXPERIMENTAL / community preview.** The reference lab is executable. The Invokta `0.6.0` direct ActionTarget is **PARTIAL** with CI evidence; DeepSeek Harness remains **NOT IMPLEMENTED**. Community preview invites public reproduction and contribution; it is not a package release or production-safety certification.
+> **Maturity: EXPERIMENTAL / community preview.** The reference lab is executable. DeepSeek Harness `0.1.0-rc.7` and Invokta `0.6.0` both have narrowly scoped **PARTIAL** executable evidence. Community preview invites public reproduction and contribution; it is not a package release or production-safety certification.
 
 ## Community preview boundary
 
@@ -127,12 +127,30 @@ See [`docs/profiles.md`](./docs/profiles.md) for the profile contract.
 | ActionSeam reference runtime | runtime | executable / experimental |
 | ActionSeam reference action target | action target | executable / experimental |
 | ActionSeam known-bad control subject | test control | executable / intentionally failing |
-| DeepSeek Harness `@deepseek-ai/dsh@0.1.0-rc.7` | runtime target | **NOT IMPLEMENTED** |
+| DeepSeek Harness `@deepseek-ai/dsh@0.1.0-rc.7` | runtime target | **PARTIAL** — direct published Agent spine + AgentLoop; 5 DSH-sensitive profiles; deterministic public ActionSeam LLM adapter; other profiles/transports not claimed |
 | Invokta `@invokta/core@0.6.0` | action target | **PARTIAL** — direct `engine.invoke`; end-to-end reference matrix executed; boundary attribution documented; CLI/MCP/HTTP not tested |
 
-Package/version research is not counted as adapter support. Provenance records live under [`adapters/`](./adapters/).
+Package/version research alone is not counted as adapter support. Provenance and evidence records live under [`adapters/`](./adapters/).
 
-## First external differential result
+## DeepSeek Harness runtime differential
+
+The first real external RuntimeTarget evidence uses the published DeepSeek Harness `0.1.0-rc.7` Agent spine and AgentLoop with a deterministic ActionSeam LLM registered through DSH's documented public adapter surface. The ActionTarget is deliberately permissive so it cannot rescue runtime failures.
+
+```text
+DeepSeekHarnessRuntime → PermissiveActionTarget
+PASS 5 / FAIL 0
+
+KnownBadRuntime → PermissiveActionTarget
+PASS 0 / FAIL 5
+```
+
+The five tested profiles are monotonic deny, input validation, output validation, untrusted-context authority, and model-visible reconstruction. DSH's real ToolRuntime/guard/invariant mechanisms are exercised; the synthetic LLM only supplies deterministic model responses and makes zero network model calls.
+
+This is not a claim about approval binding, external principal semantics, idempotent retry, stale revision, tenant isolation, secret canaries, real model-provider networking, ACP/MCP/HTTP/CLI/browser paths, or production filesystem/sandbox safety.
+
+See [`adapters/deepseek-harness/README.md`](./adapters/deepseek-harness/README.md) for the exact evidence, attribution, and exclusions.
+
+## Invokta action-boundary differential
 
 The first real external ActionTarget evidence uses `@invokta/core@0.6.0` over direct `engine.invoke`:
 

@@ -55,3 +55,50 @@ jobs:
           name: actionseam-invokta-evidence
           path: adapters/invokta/artifacts/
           if-no-files-found: error
+
+  deepseek-harness-public-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: adapters/deepseek-harness
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install frozen DSH probe dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify public bootstrap surfaces
+        run: npm run verify
+      - name: Emit public bootstrap probe
+        run: |
+          node probe.js > probe-output.json
+          cat probe-output.json
+      - name: Exercise real DSH AgentLoop tool round trip
+        run: |
+          node round-trip.js > round-trip-output.json
+          cat round-trip-output.json
+      - name: Probe DSH tool-boundary enforcement
+        run: |
+          node boundary-probe.js > boundary-probe-output.json
+          cat boundary-probe-output.json
+      - name: Run five-profile DSH differential matrix
+        run: |
+          node matrix.js > matrix-output.json
+          cat matrix-output.json
+      - name: Capture frozen dependency evidence
+        run: |
+          mkdir -p artifacts
+          npm ls @deepseek-ai/cordis @deepseek-ai/dsh-agent-spine-demo @deepseek-ai/dsh-llm @deepseek-ai/dsh-tools --json > artifacts/npm-tree.json
+          cp package-lock.json artifacts/package-lock.json
+          cp probe-output.json artifacts/probe-output.json
+          cp round-trip-output.json artifacts/round-trip-output.json
+          cp boundary-probe-output.json artifacts/boundary-probe-output.json
+          cp matrix-output.json artifacts/matrix-output.json
+      - name: Upload DeepSeek Harness probe evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: actionseam-deepseek-harness-public-probe
+          path: adapters/deepseek-harness/artifacts/
+          if-no-files-found: error

@@ -19,10 +19,10 @@
 
 | Target | State |
 | --- | --- |
-| DeepSeek Harness | `NOT_IMPLEMENTED` — provenance reviewed only |
+| DeepSeek Harness | `PARTIAL` — real `0.1.0-rc.7` published Agent spine + AgentLoop evidence for 5 profiles with a deterministic public ActionSeam LLM adapter; remaining profiles/transports not claimed |
 | Invokta | `PARTIAL` — real `@invokta/core@0.6.0` direct `engine.invoke` evidence; CLI/MCP/HTTP not tested |
 
-No adapter should move to `PARTIAL` or `SUPPORTED` without executable evidence committed to this repository.
+No adapter should move to `PARTIAL` or `SUPPORTED` without executable evidence committed to this repository. A `PARTIAL` state must remain scoped to exact versions, configurations, transports/modes, profiles, and attribution boundaries.
 
 ## Launch state
 

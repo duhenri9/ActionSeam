@@ -1,6 +1,6 @@
 # Adapter model
 
-ActionSeam intends to support two external adapter roles.
+ActionSeam supports two external adapter roles.
 
 ## Runtime adapter
 
@@ -29,4 +29,13 @@ Typical responsibilities:
 
 ## Current external targets
 
-DeepSeek Harness and Invokta have provenance records under `adapters/`, but executable adapters have not landed yet. Their status is therefore **NOT IMPLEMENTED**, not partial support.
+| Target | Role | Evidence-backed state |
+| --- | --- | --- |
+| DeepSeek Harness `0.1.0-rc.7` | runtime | `PARTIAL` — published Agent spine + AgentLoop, deterministic public ActionSeam LLM adapter, 5 DSH-sensitive profiles |
+| Invokta `@invokta/core@0.6.0` | action target | `PARTIAL` — direct `engine.invoke` evidence |
+
+`PARTIAL` is deliberately narrow. It does not mean every ActionSeam profile applies to the target, every upstream transport has been tested, or the upstream project is production-safe.
+
+DeepSeek Harness V0 currently claims only `authority.monotonic-deny.v1`, `contracts.input-validation.v1`, `contracts.output-validation.v1`, `authority.untrusted-context.v1`, and `reconstruction.model-visible.v1` for the exact direct Agent-spine composition documented under `adapters/deepseek-harness/`.
+
+Invokta V0 is limited to its documented direct `engine.invoke` ActionTarget boundary. See each adapter README and provenance record for exact versions, evidence, attribution, and exclusions.
