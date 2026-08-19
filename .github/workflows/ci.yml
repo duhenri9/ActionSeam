@@ -104,6 +104,8 @@ jobs:
           if-no-files-found: error
 
   deepseek-harness-acp-transport-probe:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 12
     defaults:
@@ -111,11 +113,25 @@ jobs:
         working-directory: adapters/deepseek-harness/acp-transport
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Resolve exact ACP transport dependencies for lock creation
         run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Commit generated ACP lockfile on internal transport branch
+        if: github.event_name == 'pull_request' && github.head_ref == 'feat/deepseek-harness-acp-transport-v0'
+        working-directory: .
+        run: |
+          if git ls-files --error-unmatch adapters/deepseek-harness/acp-transport/package-lock.json >/dev/null 2>&1 && git diff --quiet -- adapters/deepseek-harness/acp-transport/package-lock.json; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add adapters/deepseek-harness/acp-transport/package-lock.json
+          git commit -m 'build: freeze ACP transport dependencies'
+          git push origin HEAD:${GITHUB_HEAD_REF}
       - name: Run direct vs real ACP stdio differential
         run: |
           node differential.js > transport-output.json
