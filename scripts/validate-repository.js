@@ -123,6 +123,11 @@ for (const requiredMarker of [
 for (const staleAction of ['actions/checkout@v4', 'actions/setup-node@v4', 'actions/upload-artifact@v4']) {
   if (ci.includes(staleAction)) throw new Error(`CI contains stale mutable Action reference: ${staleAction}`)
 }
+const checkoutCount = (ci.match(/actions\/checkout@/g) ?? []).length
+const nonPersistentCredentialCount = (ci.match(/persist-credentials: false/g) ?? []).length
+if (checkoutCount === 0 || nonPersistentCredentialCount !== checkoutCount) {
+  throw new Error('every CI checkout must disable persisted GitHub credentials')
+}
 
 for (const path of ['adapters/deepseek-harness/provenance.json', 'adapters/invokta/provenance.json']) {
   const record = JSON.parse(await readFile(resolve(root, path), 'utf8'))
