@@ -99,7 +99,7 @@ The evidence pin intentionally names the last code-changing adapter head (`54c1c
 
 ## 2026-08-19 — DeepSeek Harness 0.1.0-rc.7 direct Agent-spine RuntimeTarget verification
 
-GitHub Actions run `32202002968` tested ActionSeam head `d171021639dce45532d624e42c41d5683e674ccb` against the public DeepSeek Harness source/release snapshot `99f6f02fecdb7dff40c3fbc9470f5907c29f74ca`.
+The evidence gate progressed in deliberate stages: public bootstrap, frozen dependency reproduction, real AgentLoop/tool round trip, fail-closed ToolRuntime probes, a five-profile differential matrix, and finally support-state alignment. The promoted evidence is GitHub Actions run `32202501764`, testing ActionSeam head `3e0cf8815806c9edfec63b9de70f06b62dbb366d` against public DeepSeek Harness snapshot `99f6f02fecdb7dff40c3fbc9470f5907c29f74ca`.
 
 The frozen direct dependencies were:
 
@@ -112,12 +112,12 @@ The job used `npm ci` from the committed lockfile and fail-closed JSON evidence 
 
 Workflow artifact:
 
-- artifact id: `9347836831`;
-- artifact digest: `sha256:3b761347bed2aa63416113c4ead0b907e02925dabd65838c2d5105d56b8eddc4`.
+- artifact id: `9347999573`;
+- artifact digest: `sha256:df7bfca0192a21b39d30f85843b16d1ac5e7c9d853a41283136ef37018a2d8f6`.
 
-### Public bootstrap and real AgentLoop round trip
+### Real public bootstrap and AgentLoop round trip
 
-The ActionSeam deterministic synthetic LLM was registered through the public DSH `LlmAdapter` extension point. It made zero network model-provider calls but drove the real published Agent spine and AgentLoop.
+The ActionSeam deterministic synthetic LLM was registered using the public DSH `LlmAdapter` extension point. It made zero network model-provider calls but drove the real published Agent spine and AgentLoop.
 
 Observed real round-trip evidence included:
 
@@ -165,6 +165,8 @@ FAIL 5
 report digest: sha256:94a8e301ba802279e7c23dc69096862e908165ceb4bd0cf84cba841f163942fa
 ```
 
+The promoted matrix artifact explicitly records `evidenceSupports: PARTIAL`.
+
 Profiles in this evidence set:
 
 - `authority.monotonic-deny.v1`;
@@ -185,4 +187,4 @@ The remaining six ActionSeam profiles are not part of this DeepSeek Harness V0 c
 
 This evidence also does not cover a real network model provider, ACP/MCP/HTTP/CLI/browser transport differential, production identity/tenant semantics, production filesystem/shell/sandbox behavior, distributed effect semantics, or framework-wide production safety.
 
-The evidence pin names the last code-changing matrix head (`d171021639dce45532d624e42c41d5683e674ccb`). Documentation/provenance commits after that head must re-run CI but do not change which runtime code produced the pinned report digests.
+The evidence pin names promoted matrix head `3e0cf8815806c9edfec63b9de70f06b62dbb366d`. Later documentation/provenance-only commits re-run CI as a regression gate but do not change the runtime/report semantics represented by the pinned report digests.
