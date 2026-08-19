@@ -1,20 +1,21 @@
 # DeepSeek Harness ACP stdio transport differential
 
-**Transport status: PARTIAL for one exact JSON-RPC stdio scenario.**
+**Transport status: PARTIAL for the exact JSON-RPC stdio baseline and the verified one-shot permission sub-surface described below.**
 
-This directory tests transport semantics separately from the seven-profile DeepSeek Harness RuntimeTarget claim.
+This directory tests transport semantics separately from the seven-profile DeepSeek Harness RuntimeTarget claim. A transport result does not silently upgrade runtime-profile coverage.
 
 ## Exact public subject
 
 - upstream source snapshot: `deepseek-ai/deepseek-harness@99f6f02fecdb7dff40c3fbc9470f5907c29f74ca`;
 - transport package: `@deepseek-ai/dsh-acp@0.1.0-rc.7`;
+- approval package: `@deepseek-ai/dsh-user-approval@0.1.0-rc.7`;
 - official client: `@agentclientprotocol/sdk@0.25.1`;
 - runtime composition: public DSH Agent spine / AgentLoop / ToolRuntime at `0.1.0-rc.7`;
 - install: `npm ci` from this directory's committed isolated lockfile.
 
-The promoted ACP path is not an in-memory test stream. `differential.js` spawns `server.js` as a real Node child process and exchanges JSON-RPC frames over the child's stdin/stdout using the official ACP SDK.
+The promoted ACP paths are not in-memory test streams. The harness spawns real Node child processes and exchanges JSON-RPC frames over stdin/stdout using the official ACP SDK.
 
-## Differential fixture
+## Baseline semantic fixture
 
 Direct and ACP paths receive the same deterministic user text and expose the same ActionSeam synthetic tool:
 
@@ -36,13 +37,11 @@ final text
   actionseam-transport-complete
 ```
 
-The ActionTarget is deliberately permissive. The purpose of this test is transport preservation, not action-boundary validation.
+The ActionTarget is deliberately permissive. The purpose is transport preservation, not action-boundary validation.
 
-## Promoted evidence
+## Promoted baseline evidence
 
 GitHub Actions run `32205337074` tested ActionSeam head `205d992c164fd06b76aef79cc66012861c98f782` using the committed transport lockfile and `npm ci`.
-
-Workflow artifact:
 
 - artifact id: `9348915317`;
 - artifact digest: `sha256:85481ca768c6402aa0849883f1e386b8ea0902cb66099da50d750df613c3a8d0`.
@@ -83,58 +82,116 @@ PASS
 mismatches: []
 ```
 
-## Negative control
+The baseline negative control changes the committed effect value by `+1000`; the comparator detects `synthetic-effect` and fails closed.
 
-The comparator is not allowed to pass merely because both paths completed. After the real ACP result is captured, the control deliberately changes the committed effect value by `+1000` and re-runs the semantic comparator.
+## One-shot permission differential
+
+The permission gate exercises the same public DSH approval seam on two paths:
+
+1. direct ToolRuntime + `@deepseek-ai/dsh-user-approval`, with a same-process deterministic decision;
+2. real ACP stdio, where the published bridge maps that request to `session/request_permission` and the official ACP SDK returns the selected one-shot option.
+
+Both `allow-once` and `reject-once` are tested independently against the same synthetic tool/effect.
+
+### Promoted permission evidence
+
+GitHub Actions run `32206488629` tested ActionSeam head `af8558cb17c414a3fcb39008b43897b3734e384d` using the committed transport lockfile and `npm ci`.
+
+- artifact id: `9349296445`;
+- artifact digest: `sha256:b9cd1c5161dd3dc2a2098b76e2712fad441dd6531528c52dbb59121b03fec217`.
+
+#### `allow-once`
+
+Direct and ACP both observe:
+
+```text
+approval outcome: allowed-once
+tool executions: 1
+committed effect: revision 1 / value 7
+final text: actionseam-transport-complete
+network model calls: 0
+```
+
+ACP wire evidence:
+
+```text
+method: session/request_permission
+session id: exact active ACP session id
+tool call id: actionseam-transport-call-1
+options:
+  allow-once  / allow_once
+  reject-once / reject_once
+```
+
+#### `reject-once`
+
+Direct and ACP both observe:
+
+```text
+approval outcome: rejected
+tool executions: 0
+committed effect: none
+final text: actionseam-transport-complete
+network model calls: 0
+```
+
+The same exact two wire options and tool-call identity are observed.
+
+### Permission negative control
+
+The comparator takes the real ACP `reject-once` result and deliberately injects the real `allow-once` tool execution/effect into it.
 
 Observed:
 
 ```text
 negative control detected: true
-mismatch: synthetic-effect
+mismatches:
+  tool-executions
+  effect
 ```
 
-A comparator that failed to detect that corruption would fail the CI job.
+A comparator that treated a rejected ACP permission as equivalent after an effect appeared would fail the CI job.
 
 ## Why process termination is not part of the claim
 
-The first probe exposed a teardown hang after the transport work had already completed. The accepted harness therefore places explicit deadlines on `initialize`, `session/new`, `session/prompt`, and evidence read, then terminates the child deterministically after evidence is captured.
+The first baseline probe exposed a teardown hang after the transport work had already completed. The accepted harness places explicit deadlines on claimed phases and terminates the child deterministically after evidence is captured.
 
-`graceful process shutdown` is explicitly outside this V0 transport claim. This prevents a lifecycle property that was not requested from being confused with transport equivalence.
+`graceful process shutdown` remains explicitly outside the transport claim. This prevents an unverified lifecycle property from being hidden under a transport PASS.
 
 ## Proven scope
 
-This ACP transport evidence supports only:
+Current ACP transport evidence supports only:
 
 - JSON-RPC stdio over a real child-process boundary;
 - `initialize` with the observed capability advertisement;
-- `session/new` for a fresh session with an absolute cwd;
-- `session/prompt` for one deterministic text prompt;
+- `session/new` with an absolute cwd;
+- one deterministic text `session/prompt`;
 - `end_turn` settlement;
 - committed `agent_message_chunk` delivery;
 - stdout protocol purity;
-- preservation of the exact material synthetic tool arguments;
-- one tool execution;
-- preservation of committed synthetic effect semantics relative to the direct path;
+- preservation of exact material synthetic tool arguments/effect semantics for the baseline;
+- `session/request_permission` for one-shot allow and reject decisions;
+- exact session/tool-call identity in the permission request;
+- exact `allow_once` and `reject_once` option mapping;
+- allow-once commits one matching effect;
+- reject-once commits no effect;
 - zero network model-provider calls.
 
 ## Not claimed
 
-This V0 transport result does **not** claim:
+This `PARTIAL` transport result does **not** claim:
 
 - graceful process shutdown;
-- `session/request_permission` differential;
+- cancelled permission-response differential;
 - `session/cancel` differential;
 - multi-session isolation;
 - image prompts;
 - MCP equivalence;
 - HTTP transport;
 - Web/GUI RPC equivalence;
-- CLI/package behavior beyond this exact Node child process using the published ACP plugin;
+- CLI/package behavior beyond the exact Node child processes using the published ACP plugin;
 - execution of all seven ActionSeam DSH runtime profiles over ACP;
 - production safety.
-
-A `PARTIAL` transport result is a scoped transport result, not a blanket upgrade of the runtime-profile matrix.
 
 ## Reproduce
 
@@ -143,4 +200,5 @@ From this directory on Node.js 22+:
 ```bash
 npm ci --ignore-scripts --no-audit --no-fund
 node differential.js
+node permission-differential.js
 ```
