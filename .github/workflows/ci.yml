@@ -75,6 +75,8 @@ jobs:
         run: npm run probe | tee probe-output.json
       - name: Exercise real DSH AgentLoop tool round trip
         run: node round-trip.js | tee round-trip-output.json
+      - name: Probe DSH tool-boundary enforcement
+        run: node boundary-probe.js | tee boundary-probe-output.json
       - name: Capture frozen dependency evidence
         run: |
           mkdir -p artifacts
@@ -82,6 +84,7 @@ jobs:
           cp package-lock.json artifacts/package-lock.json
           cp probe-output.json artifacts/probe-output.json
           cp round-trip-output.json artifacts/round-trip-output.json
+          cp boundary-probe-output.json artifacts/boundary-probe-output.json
       - name: Upload DeepSeek Harness probe evidence
         uses: actions/upload-artifact@v4
         with:
