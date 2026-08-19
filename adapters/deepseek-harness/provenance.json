@@ -11,15 +11,82 @@
   },
   "license": "MIT",
   "publicSurfacesReviewed": [
-    "CLI package @deepseek-ai/dsh",
-    "web/headless profiles",
-    "session events",
-    "agent/* extension events",
+    "@deepseek-ai/cordis Context/plugin composition",
+    "@deepseek-ai/dsh-agent-spine-demo",
+    "ctx.llm.registerAdapter / public LlmAdapter stream contract",
+    "ctx.agents.create / Agent followup / whenIdle",
+    "defineTool / ctx.tools.register / ctx.tools.execute",
     "tools/pre-execute",
-    "tools/execute",
-    "tools/post-execute",
-    "plugin/patch configuration"
+    "ctx.tools.guard",
+    "tools/result",
+    "durable session events",
+    "@deepseek-ai/dsh-agent-loop invariant companion"
   ],
-  "supportStatus": "NOT_IMPLEMENTED",
-  "notes": "This record does not claim conformance support. A future adapter must declare unsupported observation/control surfaces explicitly."
+  "supportStatus": "PARTIAL",
+  "notes": "PARTIAL is limited to the direct published Agent spine + AgentLoop composition with an ActionSeam deterministic public LlmAdapter and five DSH-sensitive ActionSeam profiles. It does not imply a real network model-provider path, ACP/MCP/HTTP/CLI/browser transport support, production safety, or coverage of all ActionSeam profiles.",
+  "resolvedDirectDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-agent-spine-demo": "0.1.0-rc.7",
+    "@deepseek-ai/dsh-llm": "0.1.0-rc.7",
+    "@deepseek-ai/dsh-tools": "0.1.0-rc.7"
+  },
+  "verifiedEvidence": {
+    "testedHeadCommit": "d171021639dce45532d624e42c41d5683e674ccb",
+    "workflowRun": 32202002968,
+    "artifactId": 9347836831,
+    "artifactDigest": "sha256:3b761347bed2aa63416113c4ead0b907e02925dabd65838c2d5105d56b8eddc4",
+    "mode": "agent-spine-direct",
+    "modelProvider": "ActionSeam deterministic public LlmAdapter; zero network model calls",
+    "candidate": {
+      "pass": 5,
+      "fail": 0,
+      "reportDigest": "sha256:137b921d4fbb117e445e5ae2048f3406f4a80449a7a9dd5849acaf7367cffcc9"
+    },
+    "knownBadControl": {
+      "pass": 0,
+      "fail": 5,
+      "reportDigest": "sha256:94a8e301ba802279e7c23dc69096862e908165ceb4bd0cf84cba841f163942fa"
+    }
+  },
+  "supportedProfiles": [
+    "authority.monotonic-deny.v1",
+    "contracts.input-validation.v1",
+    "contracts.output-validation.v1",
+    "authority.untrusted-context.v1",
+    "reconstruction.model-visible.v1"
+  ],
+  "notClaimedProfiles": [
+    "authority.approval-binding.v1",
+    "identity.external-principal.v1",
+    "effects.idempotent-retry.v1",
+    "effects.stale-revision.v1",
+    "isolation.tenant-boundary.v1",
+    "isolation.secret-canary.v1"
+  ],
+  "attribution": {
+    "dshOwned": [
+      "monotonic final tool guard",
+      "tool input validation",
+      "tool output validation",
+      "durable AgentLoop request reconstruction invariant"
+    ],
+    "actionSeamOwnedTestScaffolding": [
+      "deterministic synthetic LLM provider",
+      "adversarial pre-execute allow attempts",
+      "synthetic external state",
+      "PermissiveActionTarget differential target",
+      "structural verification of material model-visible request fields"
+    ]
+  },
+  "notTestedOrNotClaimedSurfaces": [
+    "real network model provider",
+    "ACP",
+    "MCP",
+    "HTTP transport",
+    "CLI transport differential",
+    "browser/UI",
+    "production identity and tenant semantics",
+    "production filesystem/shell/sandbox behavior",
+    "distributed effect semantics"
+  ]
 }
