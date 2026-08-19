@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises'
+import { rename, writeFile } from 'node:fs/promises'
 
 import { Context } from '@deepseek-ai/cordis'
 import * as AcpPlugin from '@deepseek-ai/dsh-acp'
@@ -19,6 +19,12 @@ async function waitForServices(ctx, names, timeoutMs = 3000) {
     if (Date.now() - started >= timeoutMs) throw new Error(`ACP cancellation server missing services: ${missing.join(', ')}`)
     await new Promise((resolve) => setTimeout(resolve, 25))
   }
+}
+
+async function writeEvidence(path, evidence) {
+  const staging = `${path}.partial`
+  await writeFile(staging, `${JSON.stringify(evidence, null, 2)}\n`, 'utf8')
+  await rename(staging, path)
 }
 
 const startPath = process.env.ACTIONSEAM_ACP_CANCEL_START_PATH
@@ -64,20 +70,20 @@ try {
 
   const adapter = new PreDispatchCancelAdapter({
     async onStart(evidence) {
-      await writeFile(startPath, `${JSON.stringify(evidence, null, 2)}\n`, 'utf8')
+      await writeEvidence(startPath, evidence)
     },
     async onAbort(evidence) {
-      await writeFile(abortPath, `${JSON.stringify(evidence, null, 2)}\n`, 'utf8')
+      await writeEvidence(abortPath, evidence)
     },
   })
   ctx.llm.registerAdapter([CANCEL_PROVIDER], adapter)
 
   registerCancelTool(ctx, {
     async onToolStart(evidence) {
-      await writeFile(toolStartPath, `${JSON.stringify(evidence, null, 2)}\n`, 'utf8')
+      await writeEvidence(toolStartPath, evidence)
     },
     async onEffect(evidence) {
-      await writeFile(effectPath, `${JSON.stringify(evidence, null, 2)}\n`, 'utf8')
+      await writeEvidence(effectPath, evidence)
     },
   })
 
