@@ -81,6 +81,14 @@ export async function runDirectCancellation() {
       throw new Error(`Direct cancellation probe mutated synthetic state: ${JSON.stringify(state)}`)
     }
 
+    if (turnEndReasons.length !== 1) {
+      throw new Error(`Direct cancellation probe expected exactly one turn/end event, got ${turnEndReasons.length}.`)
+    }
+    const [turnEndReason] = turnEndReasons
+    if (turnEndReason?.kind !== 'aborted' || turnEndReason?.reason?.kind !== 'user') {
+      throw new Error(`Direct cancellation probe ended with an unexpected reason: ${JSON.stringify(turnEndReason)}`)
+    }
+
     return {
       path: 'direct-agent-cancel',
       cancelIssued: true,
