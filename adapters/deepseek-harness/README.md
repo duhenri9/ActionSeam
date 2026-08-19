@@ -1,6 +1,6 @@
 # DeepSeek Harness runtime adapter
 
-**Status: PARTIAL / executable for the direct Agent spine + AgentLoop composition described below.**
+**Status: PARTIAL / executable for the direct `Agent spine + AgentLoop` composition described below.**
 
 This adapter targets the public DeepSeek Harness `0.1.0-rc.7` release at source snapshot `99f6f02fecdb7dff40c3fbc9470f5907c29f74ca`.
 
@@ -8,7 +8,7 @@ This adapter targets the public DeepSeek Harness `0.1.0-rc.7` release at source 
 
 The candidate boots the real published `@deepseek-ai/dsh-agent-spine-demo@0.1.0-rc.7` inside a public Cordis `Context`. That spine mounts the real DSH LLM runtime, Session store, Tool runtime, Agent registry, Invariant registry, AgentLoop, and the package-owned AgentLoop invariant companion.
 
-ActionSeam registers a deterministic synthetic `LlmAdapter` through the documented `ctx.llm.registerAdapter(...)` extension point. The adapter emits deterministic DSH stream chunks, including a real tool call, so CI needs no provider credential and makes no DeepSeek/OpenAI/model-provider network call. The synthetic LLM replaces only the model provider; it does **not** replace or mock the DSH AgentLoop, Session, ToolRuntime, guard pipeline, output validation, or invariant services.
+ActionSeam registers a deterministic synthetic `LlmAdapter` using the documented `ctx.llm.registerAdapter(...)` extension point. The adapter emits deterministic DSH stream chunks, including a real tool call, so CI needs no provider credential and makes no DeepSeek/OpenAI/model-provider network call. The synthetic LLM replaces only the model provider; it does **not** replace or mock the DSH AgentLoop, Session, ToolRuntime, guard pipeline, output validation, or invariant services.
 
 The ActionSeam synthetic effect is exposed as a real DSH tool using public `defineTool(...)` / `ctx.tools.register(...)`. Its body delegates the external effect to the ActionSeam `ActionTarget` supplied to `runtime.execute(...)`, keeping committed state synthetic while exercising DSH's actual tool dispatch path.
 
@@ -25,12 +25,12 @@ No package-private DSH test helper or source import is used.
 
 ## Executable evidence
 
-GitHub Actions run `32202002968` tested ActionSeam code head `d171021639dce45532d624e42c41d5683e674ccb` with fail-closed evidence steps.
+GitHub Actions run `32202501764` tested ActionSeam head `3e0cf8815806c9edfec63b9de70f06b62dbb366d` with fail-closed evidence steps and matrix metadata aligned to the resulting `PARTIAL` support state.
 
 Workflow artifact:
 
-- artifact id: `9347836831`;
-- artifact digest: `sha256:3b761347bed2aa63416113c4ead0b907e02925dabd65838c2d5105d56b8eddc4`.
+- artifact id: `9347999573`;
+- artifact digest: `sha256:df7bfca0192a21b39d30f85843b16d1ac5e7c9d853a41283136ef37018a2d8f6`.
 
 ### Real AgentLoop round trip
 
@@ -73,6 +73,8 @@ KnownBadRuntime → PermissiveActionTarget
 PASS 0 / FAIL 5
 report digest: sha256:94a8e301ba802279e7c23dc69096862e908165ceb4bd0cf84cba841f163942fa
 ```
+
+The matrix artifact explicitly records `evidenceSupports: PARTIAL`.
 
 The tested profiles are:
 
