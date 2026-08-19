@@ -179,7 +179,7 @@ console.log(JSON.stringify({
   upstream: 'deepseek-ai/deepseek-harness@99f6f02fecdb7dff40c3fbc9470f5907c29f74ca',
   package: '@deepseek-ai/dsh-acp@0.1.0-rc.7',
   sdk: '@agentclientprotocol/sdk@0.25.1',
-  transportSupportStatus: 'NOT_PROMOTED',
+  transportSupportStatus: 'PARTIAL',
   evidenceKind: 'direct-vs-acp-jsonrpc-stdio-child-process',
   direct,
   acp,
