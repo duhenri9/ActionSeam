@@ -20,7 +20,7 @@
 | Target | State |
 | --- | --- |
 | DeepSeek Harness runtime profiles | `PARTIAL` — real `0.1.0-rc.7` public Agent/ToolRuntime composition with executable evidence for 7 profiles; includes real one-shot approval and immutable-argument mechanisms; six profiles remain unclaimed |
-| DeepSeek Harness ACP stdio transport | `PARTIAL` — one exact direct-vs-real-child-process JSON-RPC stdio differential preserves input/tool/effect/final-answer semantics; permission, cancellation, multi-session, images, MCP/HTTP/Web and all-seven-profiles-over-ACP remain unclaimed |
+| DeepSeek Harness ACP stdio transport | `PARTIAL` — real child-process JSON-RPC stdio baseline plus separately verified `session/request_permission` one-shot allow/reject differential; cancelled permission, cancellation, multi-session, images, MCP/HTTP/Web and all-seven-profiles-over-ACP remain unclaimed |
 | Invokta | `PARTIAL` — real `@invokta/core@0.6.0` direct `engine.invoke` evidence over its explicitly homologated 11-profile scope; the two later profiles are not inherited automatically; CLI/MCP/HTTP not tested |
 
 Runtime-profile and transport evidence are separate dimensions. A transport PASS does not imply every runtime profile has been exercised over that transport, and a runtime-profile PASS does not imply transport equivalence.
@@ -29,7 +29,7 @@ No adapter should move to `PARTIAL` or `SUPPORTED` without executable evidence c
 
 A profile being added to the ActionSeam catalog does **not** expand any external adapter's claim automatically. Each target must separately show a public, observable, attributable mechanism and executable differential evidence for that profile.
 
-Likewise, adding one verified transport does not make adjacent upstream protocols equivalent. ACP stdio, MCP integration, HTTP, Web/GUI RPC, and CLI packaging remain distinct until separately tested.
+Likewise, adding one verified transport or transport sub-surface does not make adjacent upstream protocols or methods equivalent. ACP baseline semantics and one-shot permission mapping are verified independently; ACP cancellation, multi-session behavior, image prompts, MCP integration, HTTP, Web/GUI RPC, and broader CLI packaging remain distinct until separately tested.
 
 ## Launch state
 
