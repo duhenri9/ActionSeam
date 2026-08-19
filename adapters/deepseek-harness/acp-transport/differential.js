@@ -17,6 +17,14 @@ import { runDirectBaseline } from './direct.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
+function withDeadline(promise, label, timeoutMs) {
+  let timer
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`ACP transport phase timed out: ${label}`)), timeoutMs)
+  })
+  return Promise.race([promise, deadline]).finally(() => clearTimeout(timer))
+}
+
 function normalizeAcpEffect(raw) {
   return structuredClone(raw.effect)
 }
@@ -28,6 +36,15 @@ function comparePaths(direct, acp) {
   if (JSON.stringify(direct.effect) !== JSON.stringify(acp.effect)) mismatches.push('synthetic-effect')
   if (direct.networkModelCalls !== acp.networkModelCalls) mismatches.push('network-model-calls')
   return { pass: mismatches.length === 0, mismatches }
+}
+
+async function terminateChild(child) {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    return { code: child.exitCode, signal: child.signalCode }
+  }
+  const exited = new Promise((resolve) => child.once('exit', (code, signal) => resolve({ code, signal })))
+  child.kill('SIGKILL')
+  return withDeadline(exited, 'child-process termination', 5000)
 }
 
 async function runAcpStdio() {
@@ -77,18 +94,26 @@ async function runAcpStdio() {
   })
   const client = new ClientSideConnection(makeClient, stream)
 
-  let exitResult
   try {
-    const init = await client.initialize({ protocolVersion: PROTOCOL_VERSION, clientCapabilities: {} })
+    const init = await withDeadline(
+      client.initialize({ protocolVersion: PROTOCOL_VERSION, clientCapabilities: {} }),
+      'initialize',
+      8000,
+    )
     assert.deepEqual(init.agentCapabilities, {
       promptCapabilities: { image: false, audio: false, embeddedContext: false },
     })
 
-    const { sessionId } = await client.newSession({ cwd: temp, mcpServers: [] })
-    const prompt = await client.prompt({
-      sessionId,
-      prompt: [{ type: 'text', text: USER_TEXT }],
-    })
+    const { sessionId } = await withDeadline(
+      client.newSession({ cwd: temp, mcpServers: [] }),
+      'session/new',
+      8000,
+    )
+    const prompt = await withDeadline(
+      client.prompt({ sessionId, prompt: [{ type: 'text', text: USER_TEXT }] }),
+      'session/prompt',
+      15000,
+    )
     assert.equal(prompt.stopReason, 'end_turn')
 
     const committedText = updates
@@ -98,7 +123,7 @@ async function runAcpStdio() {
     assert.equal(committedText, FINAL_TEXT)
     assert.equal(permissionRequests.length, 0)
 
-    const rawEffect = JSON.parse(await readFile(effectPath, 'utf8'))
+    const rawEffect = JSON.parse(await withDeadline(readFile(effectPath, 'utf8'), 'effect evidence read', 3000))
     const frames = rawStdout.join('').split('\n').filter((line) => line.trim().length > 0)
     assert.ok(frames.length > 0, 'ACP stdout must contain protocol frames.')
     for (const line of frames) JSON.parse(line)
@@ -127,20 +152,16 @@ async function runAcpStdio() {
       },
       stderrBytes: Buffer.byteLength(stderr.join('')),
     }
+  } catch (error) {
+    const diagnostic = stderr.join('').trim()
+    throw new Error(`${error?.message ?? String(error)}${diagnostic ? `\nACP child stderr:\n${diagnostic}` : ''}`)
   } finally {
-    exitResult = await new Promise((resolve) => {
-      if (child.exitCode !== null || child.signalCode !== null) {
-        resolve({ code: child.exitCode, signal: child.signalCode })
-        return
-      }
-      child.once('exit', (code, signal) => resolve({ code, signal }))
-      child.kill('SIGTERM')
-    })
+    await terminateChild(child)
     await rm(temp, { recursive: true, force: true })
   }
 }
 
-const direct = await runDirectBaseline()
+const direct = await withDeadline(runDirectBaseline(), 'direct baseline', 15000)
 const acp = await runAcpStdio()
 const differential = comparePaths(direct, acp)
 assert.equal(differential.pass, true, `ACP transport diverged from direct path: ${differential.mismatches.join(', ')}`)
@@ -179,6 +200,7 @@ console.log(JSON.stringify({
       'same synthetic tool/effect semantics as direct path',
     ],
     notClaimed: [
+      'graceful process shutdown',
       'session/request_permission differential',
       'session/cancel differential',
       'multi-session isolation',
