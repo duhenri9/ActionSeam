@@ -56,7 +56,22 @@ evaluate({ profile, scenario, run, snapshot })
 
 A local example profile does **not** become a shipped ActionSeam profile merely because it runs. Promotion into the versioned catalog still requires the profile design, evidence model, counterexample behavior, documentation, and review expected by [`../docs/profiles.md`](../docs/profiles.md).
 
-## 4. Generate and inspect report artifacts
+## 4. Bring a runtime to one bounded profile
+
+```bash
+node examples/bring-your-runtime.mjs
+```
+
+This is the smallest current runtime-adapter template. It wires one shipped profile to a source-level runtime seam and runs the same scenario twice:
+
+- candidate: approval-binding mechanism present before dispatch → `PASS`, zero committed effects;
+- negative control: the binding check is deliberately removed → `FAIL`, one committed effect and a counterexample.
+
+The example is intentionally not an external framework claim. Replace its `execute(...)` seam with the exact public runtime boundary you want to test, pin that subject/version, preserve the negative control, and only promote support after evidence and attribution are complete.
+
+See [`../docs/bring-your-runtime.md`](../docs/bring-your-runtime.md) for the promotion checklist.
+
+## 5. Generate and inspect report artifacts
 
 ```bash
 node src/cli.js demo --subject reference --out artifacts/reference
@@ -79,7 +94,7 @@ node examples/inspect-report.mjs artifacts/known-bad/report.json
 
 The inspection example checks the report schema and digest shape before printing the summary and any failing counterexamples.
 
-## 5. Inspect adapter provenance before reading a support claim
+## 6. Inspect adapter provenance before reading a support claim
 
 ```bash
 node examples/inspect-adapter-provenance.mjs
@@ -96,7 +111,7 @@ The example reads an adapter provenance record and surfaces:
 
 This is the intended reading order for external integration claims: **provenance and evidence first, headline support status second**.
 
-## 6. Run one shipped profile with the experimental CLI
+## 7. Run one shipped profile with the experimental CLI
 
 Reference subject:
 
@@ -112,7 +127,7 @@ node src/cli.js run authority.approval-binding.v1 --subject known-bad
 
 The known-bad command intentionally exits non-zero because the profile returns `FAIL`. In shell automation, treat that non-zero exit as expected test behavior only when the specific scenario is deliberately known-bad.
 
-## 7. Reproduce external adapter evidence
+## 8. Reproduce external adapter evidence
 
 External adapter work is isolated under `adapters/` and carries its own dependency freeze and scope boundary.
 

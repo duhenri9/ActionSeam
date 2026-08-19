@@ -6,6 +6,7 @@ All notable ActionSeam changes will be recorded here.
 
 ### Added
 
+- executable “bring your runtime” onboarding that runs one shipped profile against a source-level candidate runtime seam and a deliberately broken negative control, plus a promotion guide for turning that experiment into a bounded evidence-backed adapter claim;
 - source-level runnable examples for the reference suite, a deliberately failing known-bad profile, local profile authoring, report inspection, and adapter provenance inspection, all executed by CI as public onboarding paths where practical;
 - explicit package/release-readiness gates that keep the root package at `0.0.0-experimental` and `private: true` until a stable public contract, release integrity evidence, and a dedicated publication ADR exist;
 - real DeepSeek Harness ACP `session/cancel` pre-tool-dispatch differential over the published `@deepseek-ai/dsh-acp@0.1.0-rc.7` bridge and official ACP SDK, proving model-abort propagation, `cancelled` prompt settlement, zero tool/effect execution, frozen dependencies, and a synthetic post-cancel tool/effect negative control;
@@ -29,9 +30,13 @@ All notable ActionSeam changes will be recorded here.
 
 ### Changed
 
+- ACP permission cross-process evidence is now published by a serialized atomic writer with fail-closed persistence behavior and a dedicated safety regression, preventing an older asynchronous snapshot from overwriting newer terminal evidence;
+- GitHub Actions dependencies are pinned to immutable full commits for the current Node 24-compatible official checkout, setup-node, and artifact-upload releases while ActionSeam's tested runtime remains Node.js 22; every checkout also disables persisted GitHub credentials;
+- repository validation now guards the executable runtime-onboarding path, its claim-promotion guide, immutable CI Action pins, non-persistent checkout credentials, ACP evidence-publisher safety regression, and the promoted ACP `session/cancel` documentation boundary against regression;
+- ACP adapter documentation now consistently records three evidenced stdio slices and points cancellation regression evidence to the final reviewed gate rather than an earlier intermediate run;
 - root README now prioritizes project purpose, evidence discipline, a sub-minute source quickstart, current verified target scope, security posture, and clear navigation before low-level evidence detail;
-- repository validation now treats the experimental private-package boundary, release-readiness policy, public examples, and current ACP cancellation scope as required public-surface invariants;
-- DeepSeek Harness transport evidence now separately records three ACP stdio slices: the baseline semantic differential, one-shot permission allow/reject, and pre-tool-dispatch `session/cancel`; none implies all seven runtime profiles were executed over ACP or that cancellation can roll back work that already started or committed;
+- repository validation treats the experimental private-package boundary, release-readiness policy, public examples, and current ACP cancellation scope as required public-surface invariants;
+- DeepSeek Harness transport evidence separately records three ACP stdio slices: the baseline semantic differential, one-shot permission allow/reject, and pre-tool-dispatch `session/cancel`; none implies all seven runtime profiles were executed over ACP or that cancellation can roll back work that already started or committed;
 - Invokta verification explicitly selects the eleven profiles it previously homologated, so later additions to the global ActionSeam profile catalog cannot silently expand the Invokta support claim.
 
 ## 0.0.0-experimental — 2026-08-19
