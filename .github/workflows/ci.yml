@@ -58,7 +58,7 @@ jobs:
 
   deepseek-harness-public-probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     defaults:
       run:
         working-directory: adapters/deepseek-harness
@@ -83,6 +83,10 @@ jobs:
         run: |
           node boundary-probe.js > boundary-probe-output.json
           cat boundary-probe-output.json
+      - name: Run five-profile DSH differential matrix
+        run: |
+          node matrix.js > matrix-output.json
+          cat matrix-output.json
       - name: Capture frozen dependency evidence
         run: |
           mkdir -p artifacts
@@ -91,6 +95,7 @@ jobs:
           cp probe-output.json artifacts/probe-output.json
           cp round-trip-output.json artifacts/round-trip-output.json
           cp boundary-probe-output.json artifacts/boundary-probe-output.json
+          cp matrix-output.json artifacts/matrix-output.json
       - name: Upload DeepSeek Harness probe evidence
         uses: actions/upload-artifact@v4
         with:
