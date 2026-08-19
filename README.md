@@ -6,7 +6,7 @@ ActionSeam is an experimental open-source project by **WM3 Digital** for testing
 
 It runs the same synthetic profile against an exact runtime/action-target configuration, gathers inspectable evidence, and returns a scoped result. A failure should produce something a maintainer can reproduce — not just a score.
 
-> **Maturity: EXPERIMENTAL / pre-launch.** The reference lab is executable. External DeepSeek Harness and Invokta adapters are researched but **not implemented**, so no compatibility claim exists for them yet.
+> **Maturity: EXPERIMENTAL / pre-launch.** The reference lab is executable. The Invokta `0.6.0` direct ActionTarget is **PARTIAL** with CI evidence; DeepSeek Harness remains **NOT IMPLEMENTED**. No community-launch claim exists yet.
 
 ## See it fail in under a minute
 
@@ -122,9 +122,27 @@ See [`docs/profiles.md`](./docs/profiles.md) for the profile contract.
 | ActionSeam reference action target | action target | executable / experimental |
 | ActionSeam known-bad control subject | test control | executable / intentionally failing |
 | DeepSeek Harness `@deepseek-ai/dsh@0.1.0-rc.7` | runtime target | **NOT IMPLEMENTED** |
-| Invokta `@invokta/core@0.6.0` | action target | **NOT IMPLEMENTED** |
+| Invokta `@invokta/core@0.6.0` | action target | **PARTIAL** — direct `engine.invoke`; end-to-end reference matrix executed; boundary attribution documented; CLI/MCP/HTTP not tested |
 
 Package/version research is not counted as adapter support. Provenance records live under [`adapters/`](./adapters/).
+
+## First external differential result
+
+The first real external ActionTarget evidence uses `@invokta/core@0.6.0` over direct `engine.invoke`:
+
+```text
+ReferenceRuntime → InvoktaActionTarget
+PASS 11 / FAIL 0
+
+KnownBadRuntime → InvoktaActionTarget
+PASS 4 / FAIL 7
+```
+
+The `11 / 0` reference row is an **end-to-end composition result**, not eleven guarantees supplied by Invokta. The known-bad differential is used to attribute enforcement rather than turn the matrix into a blanket framework score.
+
+In this adapter, real Invokta behavior directly enforces input validation, output validation, and capability access used by the tenant-boundary profile. Principal is supplied separately from business input at the Invokta API, but choosing a trusted principal remains a runtime responsibility. Stale-revision semantics and retry/idempotency remain ActionSeam synthetic provider/runtime responsibilities. Approval binding, monotonic deny, untrusted-context authority, reconstruction, and private-context handling are runtime properties.
+
+See [`adapters/invokta/README.md`](./adapters/invokta/README.md) for exact attribution and limitations.
 
 ## Architecture at a glance
 
