@@ -9,7 +9,7 @@ ActionSeam targets the public DeepSeek Harness `0.1.0-rc.7` release at source sn
 | Dimension | Current scope |
 | --- | --- |
 | runtime-profile conformance | `PARTIAL` — 7 explicitly homologated ActionSeam profiles on public DSH runtime surfaces |
-| ACP JSON-RPC stdio transport | `PARTIAL` — real child-process semantic baseline plus separately verified one-shot `session/request_permission` allow/reject mapping |
+| ACP JSON-RPC stdio transport | `PARTIAL` — real child-process baseline + one-shot `session/request_permission` allow/reject + pre-tool-dispatch `session/cancel` |
 
 These dimensions do not inherit from each other. The ACP transport result does **not** mean the seven runtime profiles were executed over ACP.
 
@@ -17,7 +17,7 @@ These dimensions do not inherit from each other. The ACP transport result does *
 
 The base candidate boots the real published `@deepseek-ai/dsh-agent-spine-demo@0.1.0-rc.7` inside a public Cordis `Context`. That spine mounts the real DSH LLM runtime, Session store, ToolRuntime, Agent registry, Invariant registry, AgentLoop, and package-owned AgentLoop invariant companion.
 
-ActionSeam registers a deterministic synthetic `LlmAdapter` using the documented `ctx.llm.registerAdapter(...)` extension point. It makes zero network model-provider calls and replaces only provider responses; it does not replace DSH's AgentLoop, Session, ToolRuntime, guard pipeline, validation, or invariant services.
+ActionSeam registers deterministic synthetic `LlmAdapter` implementations using the documented `ctx.llm.registerAdapter(...)` extension point. They make zero network model-provider calls and replace only provider responses; they do not replace DSH's AgentLoop, Session, ToolRuntime, guard pipeline, validation, cancellation channel, or invariant services.
 
 For the two later runtime profiles, `runtime-extended.js` keeps the already-homologated five-profile runtime unchanged and adds profile-specific public compositions. It mounts published `@deepseek-ai/dsh-user-approval` where approval semantics are required and directly exercises public `ctx.tools.execute` where argument integrity is the property under test.
 
@@ -117,7 +117,7 @@ Direct and ACP both preserve exactly one execution of `tenant-A / transport-acco
 - artifact: `9349296445`;
 - digest: `sha256:b9cd1c5161dd3dc2a2098b76e2712fad441dd6531528c52dbb59121b03fec217`.
 
-The same public DSH ToolRuntime `ask` seam is exercised direct and over real ACP stdio.
+The same public DSH ToolRuntime `ask` seam is exercised directly and over real ACP stdio.
 
 `allow-once`:
 
@@ -142,7 +142,46 @@ committed effect: none
 
 Both direct-vs-ACP permission cases pass with no mismatches. The negative control injects the real allow effect into the real reject result; the comparator detects both `tool-executions` and `effect` divergence.
 
-See [`acp-transport/README.md`](./acp-transport/README.md) for the full transport evidence and reproduction commands.
+### Promoted pre-tool-dispatch `session/cancel` differential
+
+- head: `14887ba2ee459f0456b372e4587c6b9f4a28b641`;
+- run: `32244037178`;
+- artifact: `9361890402`;
+- digest: `sha256:b891e60fc9be5fd8e42a0663fabc8b361479b6c5b0a7255eba6775676cd71e4f`.
+
+The cancellation probe first confirms the synthetic model request is genuinely in flight and has a DSH `AbortSignal`, while deliberately blocking before any tool call is emitted. It then compares direct public Agent cancellation with a real ACP `session/cancel` notification for the exact active session.
+
+Both paths observe:
+
+```text
+model started: true
+model AbortSignal observed: true
+network model calls: 0
+tool executions: 0
+synthetic effects: 0
+cancel settles: true
+```
+
+ACP additionally observes:
+
+```text
+method: session/cancel
+notification: true
+exact active session targeted: true
+original session/prompt stopReason: cancelled
+stdout JSON-RPC pure: true
+stderr bytes: 0
+```
+
+The negative control injects a synthetic post-cancel tool execution and effect; the comparator detects `toolExecutions` and `effectCount` mismatches.
+
+This claim is **pre-tool-dispatch only**. It does not establish rollback after a tool starts, rollback of committed effects, or cancellation of a non-cooperative running tool.
+
+### Final regression
+
+GitHub Actions run `32244308363` at head `4d13991fd9abe49c9879c196bd866c3614fc7d50` passed all five repository jobs after cancellation provenance promotion, including the permanent public-history secret scan. The ACP artifact is `9361984278`, digest `sha256:1145978a27795343047fe386ceef3ec346022fc0f1f22b548954de4424055cce`.
+
+See [`acp-transport/README.md`](./acp-transport/README.md) for the complete transport evidence and reproduction commands.
 
 ## Still not claimed — runtime profiles
 
@@ -160,8 +199,10 @@ These profiles remain outside the DSH runtime-profile `PARTIAL` claim:
 Current ACP transport evidence does not claim:
 
 - graceful process shutdown;
-- cancelled permission-response differential;
-- `session/cancel` differential;
+- cancelled permission-response equivalence;
+- rollback after a tool body has started;
+- rollback of a committed effect;
+- cancellation of a non-cooperative running tool;
 - multi-session isolation;
 - image prompts;
 - all seven runtime profiles over ACP;
@@ -194,4 +235,5 @@ From `adapters/deepseek-harness/acp-transport/`:
 npm ci --ignore-scripts --no-audit --no-fund
 node differential.js
 node permission-differential.js
+node cancel-differential.js
 ```

@@ -121,7 +121,7 @@ jobs:
 
   deepseek-harness-acp-transport-probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 18
     defaults:
       run:
         working-directory: adapters/deepseek-harness/acp-transport
@@ -130,26 +130,33 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install frozen ACP permission dependencies
+      - name: Install frozen ACP transport dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify cancellation harness failure paths
+        run: npm run test:cancel-harness
       - name: Preserve promoted ACP stdio baseline
         run: |
           node differential.js > transport-output.json
           cat transport-output.json
-      - name: Run direct vs ACP one-shot permission differential
+      - name: Preserve promoted ACP one-shot permission differential
         run: |
           node permission-differential.js > permission-output.json
           cat permission-output.json
-      - name: Capture frozen ACP permission evidence
+      - name: Probe direct vs ACP session/cancel before tool dispatch
+        run: |
+          node cancel-differential.js > cancel-output.json
+          cat cancel-output.json
+      - name: Capture frozen ACP transport evidence
         run: |
           mkdir -p artifacts
           npm ls @agentclientprotocol/sdk @deepseek-ai/cordis @deepseek-ai/dsh-acp @deepseek-ai/dsh-agent-spine-demo @deepseek-ai/dsh-llm @deepseek-ai/dsh-tools @deepseek-ai/dsh-user-approval --json > artifacts/npm-tree.json
           cp package-lock.json artifacts/package-lock.json
           cp transport-output.json artifacts/transport-output.json
           cp permission-output.json artifacts/permission-output.json
-      - name: Upload DeepSeek Harness ACP permission evidence
+          cp cancel-output.json artifacts/cancel-output.json
+      - name: Upload DeepSeek Harness ACP transport evidence
         uses: actions/upload-artifact@v4
         with:
-          name: actionseam-deepseek-harness-acp-permission-probe
+          name: actionseam-deepseek-harness-acp-transport-probe
           path: adapters/deepseek-harness/acp-transport/artifacts/
           if-no-files-found: error

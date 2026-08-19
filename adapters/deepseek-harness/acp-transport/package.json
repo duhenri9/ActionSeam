@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "probe": "node differential.js",
-    "permission": "node permission-differential.js"
+    "permission": "node permission-differential.js",
+    "cancel": "node cancel-differential.js",
+    "test:cancel-harness": "node --test cancel-harness-safety.js"
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "0.25.1",
