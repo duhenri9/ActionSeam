@@ -5,6 +5,7 @@ This directory separates orientation, normative behavior, maturity, provenance, 
 ## Start by intent
 
 - **I want to run it:** see [`../examples/README.md`](../examples/README.md).
+- **I want to bring my runtime:** start with [`bring-your-runtime.md`](./bring-your-runtime.md), then read [`adapters.md`](./adapters.md).
 - **I want to understand the claim model:** read [`principles.md`](./principles.md), [`result-model.md`](./result-model.md), and [`evidence.md`](./evidence.md).
 - **I want to inspect supported profiles:** read [`profiles.md`](./profiles.md).
 - **I want to integrate a runtime/action target:** read [`adapters.md`](./adapters.md) and the adapter-local evidence under [`../adapters/`](../adapters/).
@@ -21,14 +22,15 @@ This directory separates orientation, normative behavior, maturity, provenance, 
 5. [`profiles.md`](./profiles.md) — shipped profile families and their invariants.
 6. [`evidence.md`](./evidence.md) — what a validator may rely on.
 7. [`counterexamples.md`](./counterexamples.md) — failure reproduction and minimization.
-8. [`adapters.md`](./adapters.md) — runtime/action-target extension model and transport-differential rules.
-9. [`threat-model.md`](./threat-model.md) — what the experimental lab does and does not defend against.
-10. [`maturity.md`](./maturity.md) — implementation and adapter maturity.
-11. [`provenance.md`](./provenance.md) — clean-room and upstream-source rules.
-12. [`validation-record.md`](./validation-record.md) — runtime/profile/action-target evidence history.
-13. [`transport-validation.md`](./transport-validation.md) — transport-specific evidence kept separate from runtime-profile claims.
-14. [`release-readiness.md`](./release-readiness.md) — gates required before package publication.
-15. [`adr/`](./adr/) — material architecture decisions.
+8. [`bring-your-runtime.md`](./bring-your-runtime.md) — shortest bounded path from a runtime seam to one defensible profile result.
+9. [`adapters.md`](./adapters.md) — runtime/action-target extension model and transport-differential rules.
+10. [`threat-model.md`](./threat-model.md) — what the experimental lab does and does not defend against.
+11. [`maturity.md`](./maturity.md) — implementation and adapter maturity.
+12. [`provenance.md`](./provenance.md) — clean-room and upstream-source rules.
+13. [`validation-record.md`](./validation-record.md) — runtime/profile/action-target evidence history.
+14. [`transport-validation.md`](./transport-validation.md) — transport-specific evidence kept separate from runtime-profile claims.
+15. [`release-readiness.md`](./release-readiness.md) — gates required before package publication.
+16. [`adr/`](./adr/) — material architecture decisions.
 
 ## Precedence
 
