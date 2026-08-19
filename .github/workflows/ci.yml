@@ -102,3 +102,33 @@ jobs:
           name: actionseam-deepseek-harness-public-probe
           path: adapters/deepseek-harness/artifacts/
           if-no-files-found: error
+
+  deepseek-harness-acp-transport-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: adapters/deepseek-harness/acp-transport
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resolve exact ACP transport dependencies for lock creation
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Run direct vs real ACP stdio differential
+        run: |
+          node differential.js > transport-output.json
+          cat transport-output.json
+      - name: Capture ACP transport dependency and evidence artifacts
+        run: |
+          mkdir -p artifacts
+          npm ls @agentclientprotocol/sdk @deepseek-ai/cordis @deepseek-ai/dsh-acp @deepseek-ai/dsh-agent-spine-demo @deepseek-ai/dsh-llm @deepseek-ai/dsh-tools --json > artifacts/npm-tree.json
+          cp package-lock.json artifacts/package-lock.json
+          cp transport-output.json artifacts/transport-output.json
+      - name: Upload DeepSeek Harness ACP transport probe evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: actionseam-deepseek-harness-acp-transport-probe
+          path: adapters/deepseek-harness/acp-transport/artifacts/
+          if-no-files-found: error
