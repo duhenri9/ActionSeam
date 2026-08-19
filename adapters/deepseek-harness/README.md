@@ -177,9 +177,11 @@ The negative control injects a synthetic post-cancel tool execution and effect; 
 
 This claim is **pre-tool-dispatch only**. It does not establish rollback after a tool starts, rollback of committed effects, or cancellation of a non-cooperative running tool.
 
-### Final regression
+### Final reviewed regression
 
-GitHub Actions run `32244308363` at head `4d13991fd9abe49c9879c196bd866c3614fc7d50` passed all five repository jobs after cancellation provenance promotion, including the permanent public-history secret scan. The ACP artifact is `9361984278`, digest `sha256:1145978a27795343047fe386ceef3ec346022fc0f1f22b548954de4424055cce`.
+GitHub Actions run `32245848133` at head `3bdeaa96b63451d41520029972313b009f9dc325` passed all five repository jobs after the cancellation gate's review hardening. The ACP artifact is `9362531859`, digest `sha256:54f0ca50be1f5cbaa95885e413de20f5de03be91b2c6bd9df3b3d46fc7d5f7e6`.
+
+The reviewed harness also keeps early cancellation-observation failures fail-closed, tracks in-flight prompt rejection before teardown, and writes cross-process evidence atomically so a partial JSON record cannot be accepted.
 
 See [`acp-transport/README.md`](./acp-transport/README.md) for the complete transport evidence and reproduction commands.
 
