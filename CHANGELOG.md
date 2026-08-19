@@ -6,6 +6,7 @@ All notable ActionSeam changes will be recorded here.
 
 ### Added
 
+- experimental source-repository community preview launch decision in ADR 0004, explicitly separate from package publication;
 - real `@invokta/core@0.6.0` direct ActionTarget verification with differential evidence and frozen adapter lockfile;
 - clean-room reference runtime/action target;
 - deterministic synthetic external state and fault injection;

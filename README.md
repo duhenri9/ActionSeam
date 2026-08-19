@@ -6,7 +6,13 @@ ActionSeam is an experimental open-source project by **WM3 Digital** for testing
 
 It runs the same synthetic profile against an exact runtime/action-target configuration, gathers inspectable evidence, and returns a scoped result. A failure should produce something a maintainer can reproduce — not just a score.
 
-> **Maturity: EXPERIMENTAL / pre-launch.** The reference lab is executable. The Invokta `0.6.0` direct ActionTarget is **PARTIAL** with CI evidence; DeepSeek Harness remains **NOT IMPLEMENTED**. No community-launch claim exists yet.
+> **Maturity: EXPERIMENTAL / community preview.** The reference lab is executable. The Invokta `0.6.0` direct ActionTarget is **PARTIAL** with CI evidence; DeepSeek Harness remains **NOT IMPLEMENTED**. Community preview invites public reproduction and contribution; it is not a package release or production-safety certification.
+
+## Community preview boundary
+
+ActionSeam is launched for source-level testing, evidence review, profile proposals, and clean-room adapter contributions. The root package intentionally remains `private: true`: no npm publication, stable API promise, or package-support contract is implied by this community preview.
+
+See [`docs/maturity.md`](./docs/maturity.md) and [ADR 0004](./docs/adr/0004-community-preview-launch.md).
 
 ## See it fail in under a minute
 
