@@ -1,0 +1,17 @@
+{
+  "name": "@actionseam/deepseek-harness-acp-transport-probe",
+  "version": "0.0.0-probe",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "probe": "node differential.js"
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "0.25.1",
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-acp": "0.1.0-rc.7",
+    "@deepseek-ai/dsh-agent-spine-demo": "0.1.0-rc.7",
+    "@deepseek-ai/dsh-llm": "0.1.0-rc.7",
+    "@deepseek-ai/dsh-tools": "0.1.0-rc.7"
+  }
+}

@@ -6,6 +6,7 @@ All notable ActionSeam changes will be recorded here.
 
 ### Added
 
+- real DeepSeek Harness `@deepseek-ai/dsh-acp@0.1.0-rc.7` JSON-RPC stdio transport differential over a real child-process boundary using official `@agentclientprotocol/sdk@0.25.1`, frozen in an isolated lockfile with direct-vs-ACP semantic comparison and a corrupted-effect negative control;
 - generic `authority.approval-one-shot.v1` and `contracts.argument-immutability.v1` conformance profiles, each with conforming reference behavior and deliberately failing known-bad counterexamples;
 - expanded DeepSeek Harness `0.1.0-rc.7` RuntimeTarget evidence from five to seven explicitly attributable profiles, including the real published one-shot approval lifecycle and ToolRuntime immutable-argument boundary;
 - real DeepSeek Harness `0.1.0-rc.7` direct Agent-spine RuntimeTarget verification with frozen published dependencies, real AgentLoop/tool-round-trip evidence, ToolRuntime boundary probes, and differential matrices;
@@ -24,7 +25,8 @@ All notable ActionSeam changes will be recorded here.
 
 ### Changed
 
-- Invokta verification now explicitly selects the eleven profiles it previously homologated, so later additions to the global ActionSeam profile catalog cannot silently expand the Invokta support claim.
+- DeepSeek Harness evidence now records runtime-profile conformance and transport differential support as independent dimensions; ACP stdio `PARTIAL` does not imply the seven runtime profiles were executed over ACP.
+- Invokta verification explicitly selects the eleven profiles it previously homologated, so later additions to the global ActionSeam profile catalog cannot silently expand the Invokta support claim.
 
 ## 0.0.0-experimental — 2026-08-19
 
