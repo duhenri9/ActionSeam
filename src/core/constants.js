@@ -15,10 +15,12 @@ export const SubjectMaturity = Object.freeze({
 
 export const profileIds = Object.freeze({
   approvalBinding: 'authority.approval-binding.v1',
+  approvalOneShot: 'authority.approval-one-shot.v1',
   monotonicDeny: 'authority.monotonic-deny.v1',
   principalBoundary: 'identity.external-principal.v1',
   idempotentRetry: 'effects.idempotent-retry.v1',
   inputContract: 'contracts.input-validation.v1',
+  argumentImmutability: 'contracts.argument-immutability.v1',
   outputContract: 'contracts.output-validation.v1',
   staleRevision: 'effects.stale-revision.v1',
   promptAuthority: 'authority.untrusted-context.v1',
