@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const canonicalDescription = 'Adversarial conformance testing for agent runtimes, action boundaries, transports, and committed effects.'
 const required = [
   'README.md',
   'LICENSE',
@@ -43,9 +44,13 @@ if (packageJson.private !== true) throw new Error('root package remains private 
 if (packageJson.version !== '0.0.0-experimental') {
   throw new Error('root package must remain 0.0.0-experimental during source-level community preview')
 }
+if (packageJson.description !== canonicalDescription) {
+  throw new Error('package.json description must remain aligned with the canonical public project description')
+}
 
 const rootReadme = await readFile(resolve(root, 'README.md'), 'utf8')
 for (const requiredMarker of [
+  canonicalDescription,
   'EXPERIMENTAL / community preview',
   'pre-tool-dispatch `session/cancel`',
   'docs/release-readiness.md',
