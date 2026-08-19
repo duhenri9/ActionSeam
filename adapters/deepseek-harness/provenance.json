@@ -14,7 +14,9 @@
     "@deepseek-ai/cordis Context/plugin composition",
     "@deepseek-ai/dsh-agent-spine-demo",
     "ctx.llm.registerAdapter / public LlmAdapter stream contract",
+    "GenerateOptions.signal AbortSignal cancellation channel",
     "ctx.agents.create / Agent lifecycle and Session",
+    "public Agent cancel({ kind: 'user' })",
     "defineTool / ctx.tools.register / ctx.tools.execute",
     "tools/pre-execute",
     "ctx.tools.guard",
@@ -25,10 +27,11 @@
     "@deepseek-ai/dsh-user-approval allowed-once / rejected / approval audit lifecycle",
     "@deepseek-ai/dsh-acp JSON-RPC stdio transport",
     "@deepseek-ai/dsh-acp session/request_permission mapping",
-    "@agentclientprotocol/sdk ClientSideConnection / ndJsonStream"
+    "@deepseek-ai/dsh-acp session/cancel mapping and prompt settlement",
+    "@agentclientprotocol/sdk ClientSideConnection / ndJsonStream / cancel"
   ],
   "supportStatus": "PARTIAL",
-  "notes": "PARTIAL has independent evidence dimensions: seven explicitly homologated runtime profiles, one ACP JSON-RPC stdio semantic baseline, and a separately verified ACP one-shot permission differential. ACP transport evidence does not imply that all seven runtime profiles were executed over ACP.",
+  "notes": "PARTIAL has independent evidence dimensions: seven explicitly homologated runtime profiles plus ACP JSON-RPC stdio evidence for one semantic baseline, one-shot permission allow/reject, and pre-tool-dispatch session/cancel. These transport slices do not imply that all seven runtime profiles were executed over ACP or that cancellation can roll back work that has already started or committed.",
   "resolvedDirectDependencies": {
     "@deepseek-ai/cordis": "4.0.1",
     "@deepseek-ai/dsh-agent-spine-demo": "0.1.0-rc.7",
@@ -110,22 +113,56 @@
           "mismatches": ["tool-executions", "effect"]
         }
       },
+      "cancelDifferential": {
+        "status": "PARTIAL",
+        "scope": "pre-tool-dispatch cancellation only",
+        "testedHeadCommit": "14887ba2ee459f0456b372e4587c6b9f4a28b641",
+        "workflowRun": 32244037178,
+        "artifactId": 9361890402,
+        "artifactDigest": "sha256:b891e60fc9be5fd8e42a0663fabc8b361479b6c5b0a7255eba6775676cd71e4f",
+        "installMode": "npm ci from committed isolated transport lockfile",
+        "directVsAcp": "PASS",
+        "mismatches": [],
+        "wireEvidence": [
+          "model request confirmed in flight before cancellation",
+          "exactly one session/cancel JSON-RPC notification emitted",
+          "session/cancel targets the exact active ACP session id",
+          "DSH model AbortSignal observed after cancellation",
+          "original session/prompt settles with stopReason cancelled",
+          "zero tool-body executions",
+          "zero synthetic effects",
+          "stdout remains JSON-RPC pure and stderr is empty"
+        ],
+        "negativeControl": {
+          "detected": true,
+          "corruption": "synthetic post-cancel tool execution plus effect",
+          "mismatches": ["toolExecutions", "effectCount"]
+        },
+        "notClaimed": [
+          "rollback after a tool body has started",
+          "rollback of a committed effect",
+          "cancellation of a non-cooperative running tool"
+        ]
+      },
       "proven": [
         "initialize with expected prompt capability advertisement",
         "session/new with absolute cwd",
-        "session/prompt with end_turn settlement",
-        "committed agent_message_chunk output",
+        "session/prompt with end_turn settlement for the baseline",
+        "committed agent_message_chunk output for the baseline",
         "stdout protocol purity: every non-empty line parses as JSON-RPC",
-        "same material tool arguments as direct path",
+        "same material tool arguments as direct path for the baseline",
         "one tool execution on each baseline path",
-        "same committed synthetic effect semantics as direct path",
+        "same committed synthetic effect semantics as direct path for the baseline",
         "one-shot permission allow/reject mapping over session/request_permission",
+        "pre-tool-dispatch session/cancel maps to model abort and cancelled prompt settlement with zero tool/effect",
         "zero network model-provider calls"
       ],
       "notClaimed": [
         "graceful process shutdown",
         "cancelled permission response differential",
-        "session/cancel differential",
+        "rollback after a tool body has started",
+        "rollback of a committed effect",
+        "cancellation of a non-cooperative running tool",
         "multi-session isolation",
         "image prompts",
         "MCP",
@@ -165,7 +202,8 @@
     },
     "transportOwned": {
       "acp-jsonrpc-stdio": "published DSH ACP bridge owns JSON-RPC stdio session creation/prompt mapping and committed session update delivery",
-      "acp-session-request-permission": "published DSH ACP bridge maps the DSH approval/request seam to ACP session/request_permission and maps allow-once/reject-once selections back to DSH one-shot outcomes"
+      "acp-session-request-permission": "published DSH ACP bridge maps the DSH approval/request seam to ACP session/request_permission and maps allow-once/reject-once selections back to DSH one-shot outcomes",
+      "acp-session-cancel": "published DSH ACP bridge maps session/cancel to its in-flight prompt cancellation state and public Agent cancellation path, then settles the original prompt as cancelled after quiescence"
     },
     "actionSeamOwnedTestScaffolding": [
       "deterministic/no-op synthetic LLM provider",
@@ -175,12 +213,14 @@
       "PermissiveActionTarget differential target",
       "structural verification of material model-visible request fields",
       "ACP direct-vs-stdio differential comparator and corrupted-effect negative control",
-      "ACP permission direct comparator and inverted-effect negative control"
+      "ACP permission direct comparator and inverted-effect negative control",
+      "ACP pre-dispatch cancellation comparator, wire capture, and synthetic post-cancel tool/effect negative control"
     ]
   },
   "notTestedOrNotClaimedSurfaces": [
     "real network model provider",
-    "ACP cancelled-permission/cancellation/multi-session/image sub-surfaces",
+    "ACP cancelled-permission/multi-session/image sub-surfaces",
+    "ACP rollback or cancellation after tool/effect execution begins",
     "MCP",
     "HTTP transport",
     "CLI transport differential beyond the exact ACP child process",
