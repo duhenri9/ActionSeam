@@ -30,8 +30,8 @@ All notable ActionSeam changes will be recorded here.
 
 ### Changed
 
-- GitHub Actions dependencies are pinned to immutable full commits for the current Node 24-compatible official checkout, setup-node, and artifact-upload releases while ActionSeam's tested runtime remains Node.js 22;
-- repository validation now guards the executable runtime-onboarding path, its claim-promotion guide, immutable CI Action pins, and the promoted ACP `session/cancel` documentation boundary against regression;
+- GitHub Actions dependencies are pinned to immutable full commits for the current Node 24-compatible official checkout, setup-node, and artifact-upload releases while ActionSeam's tested runtime remains Node.js 22; every checkout also disables persisted GitHub credentials;
+- repository validation now guards the executable runtime-onboarding path, its claim-promotion guide, immutable CI Action pins, non-persistent checkout credentials, and the promoted ACP `session/cancel` documentation boundary against regression;
 - ACP adapter documentation now consistently records three evidenced stdio slices and points cancellation regression evidence to the final reviewed gate rather than an earlier intermediate run;
 - root README now prioritizes project purpose, evidence discipline, a sub-minute source quickstart, current verified target scope, security posture, and clear navigation before low-level evidence detail;
 - repository validation treats the experimental private-package boundary, release-readiness policy, public examples, and current ACP cancellation scope as required public-surface invariants;
