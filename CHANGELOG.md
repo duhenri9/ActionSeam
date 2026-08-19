@@ -6,6 +6,8 @@ All notable ActionSeam changes will be recorded here.
 
 ### Added
 
+- source-level runnable examples for the reference suite, a deliberately failing known-bad profile, and report inspection, all executed by CI as public onboarding paths;
+- explicit package/release-readiness gates that keep the root package at `0.0.0-experimental` and `private: true` until a stable public contract, release integrity evidence, and a dedicated publication ADR exist;
 - real DeepSeek Harness ACP `session/cancel` pre-tool-dispatch differential over the published `@deepseek-ai/dsh-acp@0.1.0-rc.7` bridge and official ACP SDK, proving model-abort propagation, `cancelled` prompt settlement, zero tool/effect execution, frozen dependencies, and a synthetic post-cancel tool/effect negative control;
 - real DeepSeek Harness ACP `session/request_permission` one-shot allow/reject differential over the published `@deepseek-ai/dsh-acp@0.1.0-rc.7` bridge and official ACP SDK, with exact session/tool-call identity, effect/no-effect semantics, frozen dependencies, and an inverted-effect negative control;
 - real DeepSeek Harness `@deepseek-ai/dsh-acp@0.1.0-rc.7` JSON-RPC stdio transport differential over a real child-process boundary using official `@agentclientprotocol/sdk@0.25.1`, frozen in an isolated lockfile with direct-vs-ACP semantic comparison and a corrupted-effect negative control;
@@ -27,7 +29,9 @@ All notable ActionSeam changes will be recorded here.
 
 ### Changed
 
-- DeepSeek Harness transport evidence now separately records three ACP stdio slices: the baseline semantic differential, one-shot permission allow/reject, and pre-tool-dispatch `session/cancel`; none implies all seven runtime profiles were executed over ACP or that cancellation can roll back work that already started or committed.
+- root README now prioritizes project purpose, evidence discipline, a sub-minute source quickstart, current verified target scope, security posture, and clear navigation before low-level evidence detail;
+- repository validation now treats the experimental private-package boundary, release-readiness policy, public examples, and current ACP cancellation scope as required public-surface invariants;
+- DeepSeek Harness transport evidence now separately records three ACP stdio slices: the baseline semantic differential, one-shot permission allow/reject, and pre-tool-dispatch `session/cancel`; none implies all seven runtime profiles were executed over ACP or that cancellation can roll back work that already started or committed;
 - Invokta verification explicitly selects the eleven profiles it previously homologated, so later additions to the global ActionSeam profile catalog cannot silently expand the Invokta support claim.
 
 ## 0.0.0-experimental — 2026-08-19
