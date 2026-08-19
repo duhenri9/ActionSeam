@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
-  "description": "Adversarial conformance for agent runtimes, action boundaries, and committed effects.",
+  "description": "Adversarial conformance testing for agent runtimes, action boundaries, transports, and committed effects.",
   "engines": {
     "node": ">=22"
   },
