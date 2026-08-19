@@ -6,7 +6,8 @@
   "scripts": {
     "probe": "node differential.js",
     "permission": "node permission-differential.js",
-    "cancel": "node cancel-differential.js"
+    "cancel": "node cancel-differential.js",
+    "test:cancel-harness": "node --test cancel-common.test.js"
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "0.25.1",
