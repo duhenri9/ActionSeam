@@ -67,13 +67,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Resolve published DSH release dependencies
-        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Install frozen DSH probe dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify public bootstrap surfaces
         run: npm run verify
       - name: Emit public bootstrap probe
         run: npm run probe | tee probe-output.json
-      - name: Capture resolved dependency evidence
+      - name: Capture frozen dependency evidence
         run: |
           mkdir -p artifacts
           npm ls @deepseek-ai/cordis @deepseek-ai/dsh-agent-spine-demo @deepseek-ai/dsh-llm @deepseek-ai/dsh-tools --json > artifacts/npm-tree.json
