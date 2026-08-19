@@ -171,12 +171,17 @@ function dshToolDefinition({ actionTarget, descriptor, principal, scenario, stor
 
 function requestContainsMaterial(request, visibleInputs, descriptor) {
   if (!request) return false
-  const messages = JSON.stringify(request.messages)
-  const tools = JSON.stringify(request.tools)
-  const inputsPresent = visibleInputs.every((entry) =>
-    messages.includes(`ACTIONSEAM_MODEL_INPUT ${JSON.stringify(entry)}`),
+  const texts = (request.messages ?? [])
+    .flatMap((message) => message.content ?? [])
+    .filter((block) => block?.type === 'text')
+    .map((block) => block.text)
+  const expectedMarkers = visibleInputs.map((entry) => `ACTIONSEAM_MODEL_INPUT ${JSON.stringify(entry)}`)
+  const inputsPresent = expectedMarkers.every((marker) => texts.includes(marker))
+  const descriptorJson = JSON.stringify(descriptor)
+  const toolPresent = (request.tools ?? []).some((tool) =>
+    tool?.name === TOOL_NAME && String(tool.description ?? '').includes(descriptorJson),
   )
-  return inputsPresent && tools.includes(JSON.stringify(descriptor))
+  return inputsPresent && toolPresent
 }
 
 function mapResult({ state, policyDecision }) {
