@@ -1,0 +1,16 @@
+{
+  "name": "@actionseam/adapter-langchainjs-experiment",
+  "version": "0.0.0-experimental",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node experiment.mjs",
+    "evidence": "mkdir -p artifacts && node experiment.mjs > artifacts/experiment-output.json"
+  },
+  "dependencies": {
+    "@langchain/core": "1.2.9",
+    "@langchain/langgraph": "1.4.10",
+    "langchain": "1.5.10",
+    "zod": "4.4.3"
+  }
+}
