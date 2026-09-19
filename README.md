@@ -12,6 +12,17 @@ It is built around a simple rule:
 
 ActionSeam runs versioned synthetic profiles against exact runtime/action-target configurations, records inspectable evidence, and reports one explicit result: `PASS`, `FAIL`, `UNSUPPORTED`, `NOT_TESTED`, or `INDETERMINATE`.
 
+
+## 60–90 second review
+
+**What this demonstrates:** engineering an agent-systems conformance lab where authority, transport, retries, identity, concurrency and committed effects are tested as explicit invariants rather than inferred from a green framework test.
+
+**Fastest proof:** the reference and deliberately known-bad subjects run locally with Node.js only, require no model API key or cloud credential, and produce inspectable JSON/HTML evidence.
+
+**Engineering path:** start with the runnable demo below, then review [architecture](./docs/architecture.md), [result semantics](./docs/result-model.md), [evidence rules](./docs/evidence.md) and the external [adapters](./docs/adapters.md).
+
+**Evidence boundary:** source implementation, automated conformance results and external-adapter evidence are kept separate. A PASS is scoped to the exact profile, version, configuration and evidence set; it is not a blanket safety score.
+
 > **Maturity: EXPERIMENTAL / community preview.** The source-level reference lab is executable. DeepSeek Harness `0.1.0-rc.7` and Invokta `0.6.0` have narrowly scoped executable evidence. The root package is intentionally private and unpublished. ActionSeam does not provide blanket framework safety certification.
 
 ## See it work in under a minute
