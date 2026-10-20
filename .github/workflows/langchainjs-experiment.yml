@@ -1,0 +1,46 @@
+name: LangChain JS experiment
+
+on:
+  pull_request:
+    paths:
+      - 'adapters/langchainjs/**'
+      - '.github/workflows/langchainjs-experiment.yml'
+      - 'src/core/**'
+      - 'src/profiles/**'
+      - 'src/reference/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  langchainjs-approval-binding-experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: adapters/langchainjs
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: '22'
+      - name: Install frozen experiment dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run bounded approval-binding experiment
+        run: |
+          mkdir -p artifacts
+          node experiment.mjs > artifacts/experiment-output.json
+          cat artifacts/experiment-output.json
+      - name: Capture dependency evidence
+        run: |
+          npm ls langchain @langchain/core @langchain/langgraph zod --json > artifacts/npm-tree.json
+          cp package-lock.json artifacts/package-lock.json
+      - name: Upload LangChain JS experiment evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: actionseam-langchainjs-approval-binding-experiment
+          path: adapters/langchainjs/artifacts/
+          if-no-files-found: error
